@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Consumos BHD</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --azul:    #1E3A5F;
+    --azul2:   #2E5C8A;
+    --naranja: #E07B39;
+    --rojo:    #C0392B;
+    --verde:   #27AE60;
+    --gris:    #F4F6F9;
+    --texto:   #2C3E50;
+    --borde:   #DDE3EC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gris); color: var(--texto); }
+
+  /* HEADER */
+  header {
+    background: var(--azul);
+    color: white;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  header .brand { font-size: 1.15rem; font-weight: 700; letter-spacing: .5px; }
+  header .brand span { color: var(--naranja); }
+  header .badge { background: var(--naranja); border-radius: 999px; padding: 3px 10px; font-size: .75rem; font-weight: 700; }
+
+  /* NAV TABS */
+  nav {
+    background: white;
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--borde);
+    overflow-x: auto;
+    padding: 0 16px;
+    position: sticky; top: 60px; z-index: 99;
+  }
+
+  /* BARRA GLOBAL DE FECHA */
+  .date-bar {
+    background: #EEF3FA;
+    border-bottom: 1px solid var(--borde);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky; top: 108px; z-index: 98;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .date-bar .db-label { font-size: .78rem; font-weight: 700; color: var(--azul); white-space: nowrap; }
+  .date-bar .db-group { display: flex; align-items: center; gap: 6px; }
+  .date-bar .db-group span { font-size: .73rem; color: #777; }
+  .date-bar input[type=date] {
+    border: 1px solid var(--borde); border-radius: 6px;
+    padding: 5px 8px; font-size: .82rem; color: var(--texto);
+    background: white; cursor: pointer;
+  }
+  .date-bar input[type=date]:focus { outline: none; border-color: var(--azul); }
+  .date-bar .db-reset {
+    background: white; border: 1px solid var(--borde); border-radius: 6px;
+    padding: 5px 12px; font-size: .78rem; cursor: pointer; color: #555;
+    white-space: nowrap;
+  }
+  .date-bar .db-reset:hover { background: var(--azul); color: white; border-color: var(--azul); transition:.15s; }
+  .date-bar .db-sync { padding:5px 14px; border-radius:6px; border:1.5px solid var(--verde); background:white; color:var(--verde); font-size:.78rem; font-weight:700; cursor:pointer; transition:.15s; }
+  .date-bar .db-sync:hover { background:var(--verde); color:white; }
+  .date-bar .db-sync:disabled { opacity:.5; cursor:not-allowed; }
+  .date-bar .db-badge {
+    background: var(--azul); color: white; border-radius: 999px;
+    padding: 3px 12px; font-size: .75rem; font-weight: 700;
+    margin-left: auto; white-space: nowrap;
+  }
+  nav button {
+    background: none; border: none; cursor: pointer;
+    padding: 14px 18px; font-size: .85rem; font-weight: 600;
+    color: #666; white-space: nowrap; border-bottom: 3px solid transparent;
+    transition: .2s;
+  }
+  nav button:hover { color: var(--azul); }
+  nav button.active { color: var(--azul); border-bottom-color: var(--naranja); }
+
+  /* MAIN */
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin-bottom: 24px; }
+  .kpi {
+    background: white; border-radius: 12px; padding: 18px 20px;
+    border-left: 4px solid var(--azul);
+    box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  }
+  .kpi.naranja { border-left-color: var(--naranja); }
+  .kpi.verde   { border-left-color: var(--verde); }
+  .kpi.rojo    { border-left-color: var(--rojo); }
+  .kpi label { font-size: .72rem; text-transform: uppercase; letter-spacing: .6px; color: #888; display: block; margin-bottom: 6px; }
+  .kpi .valor { font-size: 1.5rem; font-weight: 700; color: var(--azul); }
+  .kpi.naranja .valor { color: var(--naranja); }
+  .kpi.verde   .valor { color: var(--verde); }
+  .kpi.rojo    .valor { color: var(--rojo); }
+
+  /* CHARTS */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+  @media(max-width:700px){ .chart-grid { grid-template-columns: 1fr; } }
+  .card {
+    background: white; border-radius: 12px; padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  }
+  .card h3 { font-size: .9rem; color: var(--azul); margin-bottom: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  thead th { background: var(--azul); color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .4px; position: sticky; top: 0; }
+  tbody tr:nth-child(even) { background: #F7F9FC; }
+  tbody tr:hover { background: #EDF2F7; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+  .badge-cat {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: .72rem; font-weight: 700; white-space: nowrap;
+  }
+  .badge-alerta { background: #FDECEA; color: var(--rojo); }
+  .badge-ok    { background: #EAFAF1; color: var(--verde); }
+  .row-alerta  { background: #FFF8F7 !important; }
+
+  /* FILTROS */
+  .filters { background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 18px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .filters label { font-size: .78rem; color: #555; font-weight: 600; display: block; margin-bottom: 4px; }
+  .filters input, .filters select { border: 1px solid var(--borde); border-radius: 6px; padding: 7px 10px; font-size: .84rem; outline: none; }
+  .filters input:focus, .filters select:focus { border-color: var(--azul); }
+  .filters button { background: var(--azul); color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: .84rem; font-weight: 600; transition: .2s; }
+  .filters button:hover { background: var(--azul2); }
+  .filters button.reset { background: #e0e0e0; color: #555; }
+  .filters button.reset:hover { background: #ccc; }
+
+  /* ALERTAS */
+  .alerta-tipo { background: #FFF3CD; border-left: 4px solid #F39C12; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: .85rem; }
+  .alerta-tipo span { font-weight: 700; }
+  .alert-count { background: var(--rojo); color: white; border-radius: 999px; padding: 2px 8px; font-size: .78rem; margin-left: 8px; }
+
+  /* EXPORT */
+  .export-card { background: white; border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .export-card h2 { color: var(--azul); margin-bottom: 10px; }
+  .export-card p { color: #666; margin-bottom: 24px; font-size: .9rem; }
+  .btn-export { display: inline-block; background: var(--verde); color: white; border: none; border-radius: 8px; padding: 14px 32px; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: .2s; }
+  .btn-export:hover { background: #229954; }
+
+  /* SUMMARY BARS */
+  .sum-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .sum-bar { display: flex; align-items: center; gap: 10px; font-size: .84rem; }
+  .sum-bar .label { width: 180px; flex-shrink: 0; }
+  .sum-bar .bar-bg { flex: 1; background: var(--gris); border-radius: 999px; height: 10px; overflow: hidden; }
+  .sum-bar .bar-fill { height: 100%; border-radius: 999px; background: var(--azul); }
+  .sum-bar .amt { width: 120px; text-align: right; font-weight: 600; color: var(--azul); }
+
+  .page-title { font-size: 1.3rem; font-weight: 700; color: var(--azul); margin-bottom: 20px; }
+  .subtitle { font-size: .82rem; color: #888; margin-top: -16px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HEADER ══════════════════════════════════ -->
+<header>
+  <div class="brand">💳 Simulador de Consumos <span>BHD</span></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span style="font-size:.8rem;opacity:.7">Tarjeta: **** 0163</span>
+    <span class="badge" id="badge-sync">✓ 100 transacciones</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ NAV ════════════════════════════════════ -->
+<nav id="nav">
+  <button class="active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+  <button onclick="showPage('consumos',this)">📋 Consumos</button>
+  <button onclick="showPage('categorias',this)">🏷️ Categorías</button>
+  <button onclick="showPage('pordia',this)">📅 Por Día</button>
+  <button onclick="showPage('comercios',this)">🏪 Comercios</button>
+  <button onclick="showPage('alertas',this)">🚨 Alertas</button>
+  <button onclick="showPage('exportar',this)">📥 Exportar</button>
+</nav>
+
+<!-- ═══════════════════════════ BARRA GLOBAL FECHA ══════════════════════════ -->
+<div class="date-bar">
+  <span class="db-label">📅 Período:</span>
+  <div class="db-group">
+    <span>Desde</span>
+    <input type="date" id="g-desde" onchange="applyDateFilter()">
+  </div>
+  <div class="db-group">
+    <span>Hasta</span>
+    <input type="date" id="g-hasta" onchange="applyDateFilter()">
+  </div>
+  <button class="db-reset" onclick="resetDateFilter()">↺ Todo el período</button>
+  <button class="db-sync" id="sync-btn" onclick="syncData()">🔄 Sincronizar Gmail</button>
+  <span class="db-badge" id="range-badge"></span>
+</div>
+
+<!-- ═══════════════════════════════ MAIN ════════════════════════════════════ -->
+<main>
+
+<!-- ──────────────── DASHBOARD ──────────────── -->
+<div class="page active" id="page-dashboard">
+  <div class="page-title">📊 Dashboard General</div>
+
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <div class="chart-grid">
+    <div class="card">
+      <h3>Gasto por Categoría (RD$)</h3>
+      <div class="chart-wrap"><canvas id="chartCat"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Gasto Diario (RD$)</h3>
+      <div class="chart-wrap"><canvas id="chartDia"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Últimas 10 transacciones</h3>
+    <div class="table-wrap" style="max-height:320px;overflow-y:auto">
+      <table id="tbl-ultimas"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── CONSUMOS ──────────────── -->
+<div class="page" id="page-consumos">
+  <div class="page-title">📋 Tabla de Consumos</div>
+
+  <div class="filters">
+    <div>
+      <label>Categoría</label>
+      <select id="f-cat" onchange="filtrar()"><option value="">Todas</option></select>
+    </div>
+    <div>
+      <label>Comercio</label>
+      <input type="text" id="f-comercio" placeholder="Buscar..." oninput="filtrar()">
+    </div>
+    <div>
+      <label>Moneda</label>
+      <select id="f-moneda" onchange="filtrar()"><option value="">Todas</option><option>RD</option><option>US</option></select>
+    </div>
+    <button class="reset" onclick="resetFiltros()">↺ Limpiar</button>
+  </div>
+
+  <div class="card">
+    <div id="consumos-count" style="font-size:.82rem;color:#888;margin-bottom:10px"></div>
+    <div class="table-wrap" style="max-height:480px;overflow-y:auto">
+      <table id="tbl-consumos"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── CATEGORÍAS ──────────────── -->
+<div class="page" id="page-categorias">
+  <div class="page-title">🏷️ Resumen por Categoría</div>
+  <div class="chart-grid">
+    <div class="card">
+      <h3>Distribución (RD$)</h3>
+      <div class="chart-wrap"><canvas id="chartCat2"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Gasto por categoría</h3>
+      <div class="chart-wrap"><canvas id="chartCatBar"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Detalle por Categoría</h3>
+    <div class="table-wrap"><table id="tbl-cat"></table></div>
+  </div>
+</div>
+
+<!-- ──────────────── POR DÍA ──────────────── -->
+<div class="page" id="page-pordia">
+  <div class="page-title">📅 Resumen por Día</div>
+  <div class="kpi-grid" id="kpi-dia"></div>
+  <div class="chart-grid">
+    <div class="card">
+      <h3>Gasto diario (RD$)</h3>
+      <div class="chart-wrap"><canvas id="chartDia2"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Transacciones por día</h3>
+      <div class="chart-wrap"><canvas id="chartDiaTx"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Detalle por Día</h3>
+    <div class="table-wrap"><table id="tbl-dia"></table></div>
+  </div>
+</div>
+
+<!-- ──────────────── COMERCIOS ──────────────── -->
+<div class="page" id="page-comercios">
+  <div class="page-title">🏪 Comercios Frecuentes</div>
+  <div class="chart-grid">
+    <div class="card">
+      <h3>Top 8 por frecuencia</h3>
+      <div class="chart-wrap"><canvas id="chartFreq"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Top 8 por monto (RD$)</h3>
+      <div class="chart-wrap"><canvas id="chartMonto"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Todos los comercios</h3>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto">
+      <table id="tbl-comercios"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── ALERTAS ──────────────── -->
+<div class="page" id="page-alertas">
+  <div class="page-title">🚨 Alertas Activas</div>
+  <div class="kpi-grid" id="kpi-alertas"></div>
+  <div class="chart-grid">
+    <div class="card" style="grid-column:span 2">
+      <h3>Tipos de alerta detectados</h3>
+      <div id="alerta-tipos"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Transacciones con alertas</h3>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto">
+      <table id="tbl-alertas"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── EXPORTAR ──────────────── -->
+<div class="page" id="page-exportar">
+  <div class="page-title">📥 Exportar</div>
+  <div class="export-card">
+    <h2>Descargar Reporte CSV</h2>
+    <p>Descarga todas las transacciones en formato CSV compatible con Excel.<br>
+       En el proyecto Python real se genera un Excel con 4 hojas formateadas.</p>
+    <button class="btn-export" onclick="exportarCSV()">⬇️ Descargar CSV</button>
+  </div>
+  <br>
+  <div class="card">
+    <h3>Vista previa del reporte</h3>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto">
+      <table id="tbl-export"></table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════ DATA + LOGIC ════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────
+// DATOS DE MUESTRA (simulan correos BHD reales)
+// ─────────────────────────────────────────────
+// Datos reales importados desde Gmail — Tarjeta ****0163
+let DATA = [
+  {fecha:"31/05/2026",hora:"05:13 PM",tarjeta:"0163",moneda:"RD",monto:7060.0,comercio:"PALU ACCESORIOS CARREFOUR",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Monto alto (>5,000 RD$) | Comercio sin categoría (Otros)"},
+  {fecha:"31/05/2026",hora:"01:40 PM",tarjeta:"0163",moneda:"RD",monto:2590.0,comercio:"RON GALLERY",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"31/05/2026",hora:"01:12 PM",tarjeta:"0163",moneda:"RD",monto:3026.7,comercio:"RESTAURANTE DEL CHINO LEE",estado:"Aprobada",tipo:"Compra",categoria:"Restaurantes",alertas:""},
+  {fecha:"30/05/2026",hora:"07:23 AM",tarjeta:"0163",moneda:"US",monto:29.98,comercio:"APPLE.COM/BILL",estado:"Aprobada",tipo:"Compra",categoria:"Suscripciones Digitales",alertas:"Transacción en USD"},
+  {fecha:"28/05/2026",hora:"09:56 PM",tarjeta:"0163",moneda:"RD",monto:211.84,comercio:"FARM CAROL CUADRA ALAM",estado:"Aprobada",tipo:"Compra",categoria:"Farmacia / Salud",alertas:""},
+  {fecha:"28/05/2026",hora:"08:13 PM",tarjeta:"0163",moneda:"US",monto:12.44,comercio:"Prime Video Channels",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros) | Transacción en USD"},
+  {fecha:"28/05/2026",hora:"07:28 PM",tarjeta:"0163",moneda:"RD",monto:3505.51,comercio:"FARMACIA VIP MONUMENTAL",estado:"Aprobada",tipo:"Compra",categoria:"Farmacia / Salud",alertas:""},
+  {fecha:"28/05/2026",hora:"04:06 PM",tarjeta:"0163",moneda:"RD",monto:6342.4,comercio:"RESTAURANTE COREANO EL PA",estado:"Aprobada",tipo:"Compra",categoria:"Restaurantes",alertas:"Monto alto (>5,000 RD$)"},
+  {fecha:"27/05/2026",hora:"08:44 AM",tarjeta:"0163",moneda:"US",monto:15.16,comercio:"AMAZON PRIME PMTS",estado:"Aprobada",tipo:"Reserva de Fondos (Hold)",categoria:"Suscripciones Digitales",alertas:"Transacción en USD"},
+  {fecha:"26/05/2026",hora:"01:33 PM",tarjeta:"0163",moneda:"US",monto:53.09,comercio:"AMAZON MKTPLACE PMTS",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros) | Transacción en USD"},
+  {fecha:"25/05/2026",hora:"05:32 PM",tarjeta:"0163",moneda:"RD",monto:2641.0,comercio:"BRAVO REP DE COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"25/05/2026",hora:"01:24 PM",tarjeta:"0163",moneda:"RD",monto:4388.0,comercio:"TOTALENERGIES LA NORTENA",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"24/05/2026",hora:"10:16 AM",tarjeta:"0163",moneda:"RD",monto:645.01,comercio:"CAFE 32 AV LUPERON",estado:"Aprobada",tipo:"Compra",categoria:"Restaurantes",alertas:""},
+  {fecha:"24/05/2026",hora:"06:59 PM",tarjeta:"0163",moneda:"RD",monto:264.8,comercio:"FARMACIA VIP MONUMENTAL",estado:"Aprobada",tipo:"Compra",categoria:"Farmacia / Salud",alertas:""},
+  {fecha:"24/05/2026",hora:"02:06 PM",tarjeta:"0163",moneda:"RD",monto:350.0,comercio:"LITTLE CAESARS AUT DUARTE",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"24/05/2026",hora:"01:54 PM",tarjeta:"0163",moneda:"RD",monto:470.0,comercio:"MCDONALD S LUPERON",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"23/05/2026",hora:"09:50 PM",tarjeta:"0163",moneda:"RD",monto:451.0,comercio:"FARMACIA LA EMBAJADA",estado:"Aprobada",tipo:"Compra",categoria:"Farmacia / Salud",alertas:""},
+  {fecha:"23/05/2026",hora:"07:42 PM",tarjeta:"0163",moneda:"RD",monto:1280.0,comercio:"MCDONALD P SAN ISIDRO",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"23/05/2026",hora:"04:21 PM",tarjeta:"0163",moneda:"RD",monto:900.0,comercio:"COLEGIO MIS ESTRELLAS",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"22/05/2026",hora:"05:48 PM",tarjeta:"0163",moneda:"US",monto:15.99,comercio:"APPLE.COM/BILL",estado:"Aprobada",tipo:"Reserva de Fondos (Hold)",categoria:"Suscripciones Digitales",alertas:"Transacción en USD"},
+  {fecha:"22/05/2026",hora:"05:27 PM",tarjeta:"0163",moneda:"RD",monto:1789.0,comercio:"UNIQUE SALON",estado:"Aprobada",tipo:"Compra",categoria:"Cuidado Personal",alertas:""},
+  {fecha:"21/05/2026",hora:"09:49 PM",tarjeta:"0163",moneda:"RD",monto:2782.0,comercio:"Temu",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"21/05/2026",hora:"09:37 AM",tarjeta:"0163",moneda:"RD",monto:578.0,comercio:"IMAREF REP COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"21/05/2026",hora:"09:34 PM",tarjeta:"0163",moneda:"RD",monto:1064.0,comercio:"Temu",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"21/05/2026",hora:"09:30 AM",tarjeta:"0163",moneda:"US",monto:10.0,comercio:"GAMMA.APP",estado:"Denegada- Tarjeta Restringida",tipo:"Reserva de Fondos (Hold)",categoria:"Otros",alertas:"Comercio sin categoría (Otros) | Transacción en USD"},
+  {fecha:"21/05/2026",hora:"09:16 PM",tarjeta:"0163",moneda:"RD",monto:1307.0,comercio:"Temu",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"20/05/2026",hora:"07:25 PM",tarjeta:"0163",moneda:"RD",monto:542.37,comercio:"COFFEE SHOP ALTOS TOWN",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"20/05/2026",hora:"03:44 PM",tarjeta:"0163",moneda:"RD",monto:1031.0,comercio:"BRAVO REP DE COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"19/05/2026",hora:"08:59 AM",tarjeta:"0163",moneda:"RD",monto:600.0,comercio:"MASTH LUXURY",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"19/05/2026",hora:"05:45 PM",tarjeta:"0163",moneda:"RD",monto:13726.09,comercio:"JUMBO PATIO EMBAJADA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:"Monto alto (>5,000 RD$)"},
+  {fecha:"19/05/2026",hora:"04:56 PM",tarjeta:"0163",moneda:"RD",monto:12012.28,comercio:"PRICESMART REP COLOM",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:"Monto alto (>5,000 RD$)"},
+  {fecha:"18/05/2026",hora:"08:19 PM",tarjeta:"0163",moneda:"RD",monto:520.0,comercio:"AXXON EL MILLON",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"06:51 PM",tarjeta:"0163",moneda:"RD",monto:2621.2,comercio:"PLAZA PAMELIAS",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"06:14 PM",tarjeta:"0163",moneda:"RD",monto:530.0,comercio:"PLAZA JACARANDA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"05:14 PM",tarjeta:"0163",moneda:"RD",monto:4235.0,comercio:"TEXACO ANTILLANA",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"18/05/2026",hora:"05:01 PM",tarjeta:"0163",moneda:"RD",monto:575.0,comercio:"MINI MARKET MADERA ANTILL",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"04:36 PM",tarjeta:"0163",moneda:"RD",monto:150.0,comercio:"SANTIAGO CENTER",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"04:17 PM",tarjeta:"0163",moneda:"RD",monto:600.0,comercio:"PARDOS CHICKEN",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"04:15 PM",tarjeta:"0163",moneda:"RD",monto:265.5,comercio:"CAFE CIBAO AGORA STGO",estado:"Aprobada",tipo:"Compra",categoria:"Restaurantes",alertas:"Más de 5 consumos en el día"},
+  {fecha:"18/05/2026",hora:"04:11 PM",tarjeta:"0163",moneda:"RD",monto:600.0,comercio:"PARDOS CHICKEN",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros) | Posible duplicado (mismo comercio, monto y día)"},
+  {fecha:"18/05/2026",hora:"03:47 PM",tarjeta:"0163",moneda:"RD",monto:1500.0,comercio:"PARQUES TEMATICOS DEL",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"03:22 PM",tarjeta:"0163",moneda:"RD",monto:710.0,comercio:"MCDONALS AGORA SC",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"18/05/2026",hora:"02:40 PM",tarjeta:"0163",moneda:"RD",monto:1575.0,comercio:"PARQUES TEMATICOS DEL",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"17/05/2026",hora:"12:28 PM",tarjeta:"0163",moneda:"RD",monto:835.0,comercio:"MAVASA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"17/05/2026",hora:"11:49 AM",tarjeta:"0163",moneda:"RD",monto:2060.0,comercio:"MCDONALD PAT COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"17/05/2026",hora:"09:00 PM",tarjeta:"0163",moneda:"RD",monto:211.84,comercio:"FARM CAROL ESTRELLA S",estado:"Aprobada",tipo:"Compra",categoria:"Farmacia / Salud",alertas:""},
+  {fecha:"17/05/2026",hora:"01:36 PM",tarjeta:"0163",moneda:"RD",monto:1165.0,comercio:"SHELL BONAO I",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"16/05/2026",hora:"11:42 AM",tarjeta:"0163",moneda:"RD",monto:77300.0,comercio:"KODLAND PLATFORM",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Monto alto (>5,000 RD$) | Comercio sin categoría (Otros)"},
+  {fecha:"16/05/2026",hora:"11:31 PM",tarjeta:"0163",moneda:"RD",monto:710.0,comercio:"MCDONALDS LOS PINOS",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"16/05/2026",hora:"10:17 AM",tarjeta:"0163",moneda:"RD",monto:2205.0,comercio:"UNIQUE SALON",estado:"Aprobada",tipo:"Compra",categoria:"Cuidado Personal",alertas:""},
+  {fecha:"15/05/2026",hora:"10:11 PM",tarjeta:"0163",moneda:"US",monto:5.0,comercio:"thecoursiv",estado:"Denegada- Tarjeta Restringida",tipo:"Reserva de Fondos (Hold)",categoria:"Otros",alertas:"Comercio sin categoría (Otros) | Transacción en USD"},
+  {fecha:"15/05/2026",hora:"09:31 AM",tarjeta:"0163",moneda:"RD",monto:64.36,comercio:"LOS HIDALGOS CND",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"15/05/2026",hora:"09:30 AM",tarjeta:"0163",moneda:"RD",monto:87.28,comercio:"LOS HIDALGOS CND",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"15/05/2026",hora:"05:08 PM",tarjeta:"0163",moneda:"RD",monto:300.0,comercio:"CBP COLMADO EL POTRO",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"15/05/2026",hora:"04:44 PM",tarjeta:"0163",moneda:"RD",monto:2885.0,comercio:"HYM AGORA MALL",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"15/05/2026",hora:"04:21 PM",tarjeta:"0163",moneda:"RD",monto:3399.0,comercio:"MEGAMODA AGORA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"15/05/2026",hora:"03:43 PM",tarjeta:"0163",moneda:"RD",monto:1100.0,comercio:"ABATTE PELUQUERIA",estado:"Aprobada",tipo:"Compra",categoria:"Cuidado Personal",alertas:""},
+  {fecha:"14/05/2026",hora:"10:11 PM",tarjeta:"0163",moneda:"US",monto:39.99,comercio:"thecoursiv",estado:"Denegada- Tarjeta Restringida",tipo:"Reserva de Fondos (Hold)",categoria:"Otros",alertas:"Comercio sin categoría (Otros) | Transacción en USD"},
+  {fecha:"12/05/2026",hora:"12:07 PM",tarjeta:"0163",moneda:"RD",monto:630.0,comercio:"UNIQUE SALON",estado:"Aprobada",tipo:"Compra",categoria:"Cuidado Personal",alertas:""},
+  {fecha:"12/05/2026",hora:"06:53 PM",tarjeta:"0163",moneda:"RD",monto:739.0,comercio:"KFC CARREFOUR",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"11/05/2026",hora:"12:38 PM",tarjeta:"0163",moneda:"RD",monto:1180.0,comercio:"MAICKY GOURMET",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"11/05/2026",hora:"06:01 PM",tarjeta:"0163",moneda:"RD",monto:1198.11,comercio:"BM CARGO AV REPUBLICA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"11/05/2026",hora:"05:48 PM",tarjeta:"0163",moneda:"RD",monto:3030.44,comercio:"SIRENA MARKET P COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"10/05/2026",hora:"05:53 PM",tarjeta:"0163",moneda:"RD",monto:1120.0,comercio:"MCDONALD PAT COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"08/06/2026",hora:"05:59 PM",tarjeta:"0163",moneda:"RD",monto:7062.0,comercio:"BRAVO REP DE COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:"Monto alto (>5,000 RD$)"},
+  {fecha:"08/06/2026",hora:"05:26 PM",tarjeta:"0163",moneda:"RD",monto:4352.0,comercio:"PRICESMART REP COLOM",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"08/05/2026",hora:"01:56 PM",tarjeta:"0163",moneda:"RD",monto:4392.9,comercio:"TRANSDIESEL DEL CARIBE",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"07/06/2026",hora:"10:08 AM",tarjeta:"0163",moneda:"RD",monto:2524.67,comercio:"JUMBO COLINAS MALL",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"07/06/2026",hora:"08:35 PM",tarjeta:"0163",moneda:"RD",monto:880.0,comercio:"MCDONALD PAT COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"07/05/2026",hora:"06:11 PM",tarjeta:"0163",moneda:"RD",monto:5887.0,comercio:"BRAVO REP DE COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:"Monto alto (>5,000 RD$)"},
+  {fecha:"05/06/2026",hora:"12:55 PM",tarjeta:"0163",moneda:"RD",monto:231.2,comercio:"FARM CAROL CUADRA ALAM",estado:"Aprobada",tipo:"Compra",categoria:"Farmacia / Salud",alertas:"Más de 5 consumos en el día"},
+  {fecha:"05/06/2026",hora:"12:52 PM",tarjeta:"0163",moneda:"RD",monto:3945.5,comercio:"FORNO BRAVO ALAMEDA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:"Más de 5 consumos en el día"},
+  {fecha:"05/06/2026",hora:"09:50 AM",tarjeta:"0163",moneda:"RD",monto:788.0,comercio:"UNIQUE SALON",estado:"Aprobada",tipo:"Compra",categoria:"Cuidado Personal",alertas:"Más de 5 consumos en el día"},
+  {fecha:"05/06/2026",hora:"08:36 PM",tarjeta:"0163",moneda:"RD",monto:280.0,comercio:"MCDONALD P LAS COLINAS",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"05/06/2026",hora:"08:28 PM",tarjeta:"0163",moneda:"RD",monto:998.0,comercio:"LITTLE CAESARS STGO COLIN",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"05/06/2026",hora:"06:16 PM",tarjeta:"0163",moneda:"RD",monto:340.0,comercio:"SHELL LA VEGA",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"05/06/2026",hora:"05:33 PM",tarjeta:"0163",moneda:"RD",monto:2215.0,comercio:"PLAZA JACARANDA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"05/06/2026",hora:"05:14 PM",tarjeta:"0163",moneda:"RD",monto:1299.99,comercio:"PLAZA JACARANDA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"05/06/2026",hora:"03:51 PM",tarjeta:"0163",moneda:"RD",monto:790.0,comercio:"BONJOUR TOTAL PEDREGAL",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:"Más de 5 consumos en el día"},
+  {fecha:"05/06/2026",hora:"03:31 PM",tarjeta:"0163",moneda:"RD",monto:710.0,comercio:"MAVASA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"05/06/2026",hora:"03:29 PM",tarjeta:"0163",moneda:"RD",monto:2931.0,comercio:"TEXACO ESTACION PALMAREJO",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:"Más de 5 consumos en el día"},
+  {fecha:"05/05/2026",hora:"11:28 PM",tarjeta:"0163",moneda:"RD",monto:844.8,comercio:"GASTRONOMIA MEXICANA S A",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"05/05/2026",hora:"08:58 PM",tarjeta:"0163",moneda:"RD",monto:1000.0,comercio:"SHELL LOS PRADOS",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"05/05/2026",hora:"06:34 PM",tarjeta:"0163",moneda:"RD",monto:6650.0,comercio:"PRICESMART REP COLOM",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:"Monto alto (>5,000 RD$)"},
+  {fecha:"05/05/2026",hora:"06:20 PM",tarjeta:"0163",moneda:"RD",monto:160.0,comercio:"TOTAL STOP&GO",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"05/05/2026",hora:"05:55 PM",tarjeta:"0163",moneda:"RD",monto:950.0,comercio:"UNIQUE SALON",estado:"Aprobada",tipo:"Compra",categoria:"Cuidado Personal",alertas:""},
+  {fecha:"05/05/2026",hora:"05:55 PM",tarjeta:"0163",moneda:"RD",monto:185.0,comercio:"ESSO H E NUEVO MILENIO C",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Más de 5 consumos en el día | Comercio sin categoría (Otros)"},
+  {fecha:"04/06/2026",hora:"09:21 PM",tarjeta:"0163",moneda:"RD",monto:910.0,comercio:"MC DONALDS LOS PINOS",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"04/06/2026",hora:"07:44 PM",tarjeta:"0163",moneda:"US",monto:29.98,comercio:"APPLE.COM/BILL",estado:"Aprobada",tipo:"Reserva de Fondos (Hold)",categoria:"Suscripciones Digitales",alertas:"Transacción en USD"},
+  {fecha:"04/05/2026",hora:"06:08 PM",tarjeta:"0163",moneda:"RD",monto:400.0,comercio:"MCDONALD P LAS COLINAS",estado:"Aprobada",tipo:"Compra",categoria:"Comida Rápida",alertas:""},
+  {fecha:"04/05/2026",hora:"06:00 PM",tarjeta:"0163",moneda:"RD",monto:560.0,comercio:"MC DONALDS LAS COLINAS",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"04/05/2026",hora:"03:59 PM",tarjeta:"0163",moneda:"RD",monto:226.0,comercio:"LA CASA DEL LICOR STORE S",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"04/05/2026",hora:"03:11 PM",tarjeta:"0163",moneda:"RD",monto:570.0,comercio:"MAGISSA FOOD SHOP",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"02/06/2026",hora:"05:53 PM",tarjeta:"0163",moneda:"RD",monto:2615.0,comercio:"BRAVO REP DE COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"01/06/2026",hora:"12:49 PM",tarjeta:"0163",moneda:"RD",monto:215.0,comercio:"BONJOUR LA PLAYA",estado:"Aprobada",tipo:"Compra",categoria:"Otros",alertas:"Comercio sin categoría (Otros)"},
+  {fecha:"01/06/2026",hora:"11:05 AM",tarjeta:"0163",moneda:"RD",monto:1200.0,comercio:"RESTAURANT SEGURA",estado:"Aprobada",tipo:"Compra",categoria:"Restaurantes",alertas:"Más de 5 consumos en el día"},
+  {fecha:"01/06/2026",hora:"05:55 PM",tarjeta:"0163",moneda:"RD",monto:959.32,comercio:"JUMBO PATIO EMBAJADA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"01/06/2026",hora:"05:35 PM",tarjeta:"0163",moneda:"RD",monto:4473.33,comercio:"PRICESMART REP COLOM",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""},
+  {fecha:"01/06/2026",hora:"05:03 PM",tarjeta:"0163",moneda:"RD",monto:4337.5,comercio:"TOTAL EST SERV CONCHA",estado:"Aprobada",tipo:"Compra",categoria:"Combustible / Transporte",alertas:""},
+  {fecha:"01/06/2026",hora:"01:01 PM",tarjeta:"0163",moneda:"RD",monto:349.0,comercio:"SIRENA MARKET P COLOMBIA",estado:"Aprobada",tipo:"Compra",categoria:"Supermercado / Hogar",alertas:""}
+];
+
+// ─────────────────────────────────────────────
+// COLORES / HELPERS
+// ─────────────────────────────────────────────
+const COLORES = ["#1E3A5F","#E07B39","#27AE60","#2980B9","#8E44AD","#C0392B","#F39C12","#16A085","#2C3E50","#7F8C8D"];
+const catColors = {};
+function buildCatColors(){ [...new Set(DATA.map(d=>d.categoria))].forEach((c,i)=>catColors[c]=COLORES[i%COLORES.length]); }
+function catColor(c){ return catColors[c]||"#999"; }
+function fmt(n,m="RD"){ return m==="US"?`US$ ${n.toFixed(2)}`:`RD$ ${n.toLocaleString('es-DO',{minimumFractionDigits:2})}`; }
+function fmtN(n){ return n.toLocaleString('es-DO',{minimumFractionDigits:2}); }
+const CAT_LABELS = {"Supermercado / Hogar":"🛒","Comida Rápida":"🍔","Restaurantes":"🍽️","Combustible / Transporte":"⛽","Farmacia / Salud":"💊","Cuidado Personal":"✂️","Suscripciones Digitales":"📱","Otros":"❓"};
+function th(...cols){ return `<thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>`; }
+function tr(cols,cls=""){ return `<tr class="${cls}">${cols.map(c=>`<td>${c}</td>`).join("")}</tr>`; }
+
+// Destruye el chart anterior antes de crear uno nuevo en el mismo canvas
+function mkChart(id,config){
+  const ex=Chart.getChart(id); if(ex) ex.destroy();
+  return new Chart(document.getElementById(id),config);
+}
+
+// ─────────────────────────────────────────────
+// FILTRO GLOBAL DE FECHA (compartido por todas las páginas)
+// ─────────────────────────────────────────────
+let _allISO = [], gDesde = '', gHasta = '';
+
+function toISO(s){ return s.split('/').reverse().join('-'); }
+
+function getFiltered(){
+  return DATA.filter(d=>{ const iso=toISO(d.fecha); return iso>=gDesde&&iso<=gHasta; });
+}
+
+function updateBadge(){
+  const fil=getFiltered();
+  const d1=gDesde.split('-').reverse().join('/'), d2=gHasta.split('-').reverse().join('/');
+  document.getElementById('range-badge').textContent=`${d1} — ${d2}  ·  ${fil.length} transacciones`;
+}
+
+function applyDateFilter(){
+  const d=document.getElementById('g-desde').value, h=document.getElementById('g-hasta').value;
+  if(d) gDesde=d; if(h) gHasta=h;
+  // Asegura que desde <= hasta
+  if(gDesde>gHasta){ const t=gDesde; gDesde=gHasta; gHasta=t;
+    document.getElementById('g-desde').value=gDesde;
+    document.getElementById('g-hasta').value=gHasta; }
+  updateBadge();
+  renderCurrentPage();
+}
+
+function resetDateFilter(){
+  gDesde=_allISO[0]; gHasta=_allISO[_allISO.length-1];
+  document.getElementById('g-desde').value=gDesde;
+  document.getElementById('g-hasta').value=gHasta;
+  updateBadge(); renderCurrentPage();
+}
+
+// ─────────────────────────────────────────────
+// NAVEGACIÓN — reconstruye la página activa al cambiar el filtro
+// ─────────────────────────────────────────────
+let currentPage='dashboard';
+
+function renderCurrentPage(){
+  ({dashboard:buildDashboard,consumos:renderConsumos,categorias:buildCategorias,
+    pordia:buildPorDia,comercios:buildComercios,alertas:buildAlertas,exportar:buildExport}
+  )[currentPage]();
+}
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  currentPage=id; renderCurrentPage();
+}
+
+// ─────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────
+function buildDashboard(){
+  const df=getFiltered();
+  const rd=df.filter(d=>d.moneda==="RD"), us=df.filter(d=>d.moneda==="US"), alts=df.filter(d=>d.alertas);
+  const totalRD=rd.reduce((s,d)=>s+d.monto,0), totalUS=us.reduce((s,d)=>s+d.monto,0);
+  const avg=rd.length?totalRD/rd.length:0;
+  const byDay={};  rd.forEach(d=>{byDay[d.fecha]=(byDay[d.fecha]||0)+d.monto;});
+  const topDay=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0]||["—",0];
+  const byCat={};  rd.forEach(d=>{byCat[d.categoria]=(byCat[d.categoria]||0)+d.monto;});
+  const topCat=Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0]||["—",0];
+  const byMerch={}; df.forEach(d=>{byMerch[d.comercio]=(byMerch[d.comercio]||0)+1;});
+  const topMerch=Object.entries(byMerch).sort((a,b)=>b[1]-a[1])[0]||["—",0];
+
+  document.getElementById('kpi-grid').innerHTML=[
+    {l:"💰 Total RD$",v:"RD$ "+fmtN(totalRD),cls:""},
+    {l:"🔢 Transacciones",v:df.length,cls:"naranja"},
+    {l:"📈 Promedio RD$",v:"RD$ "+fmtN(avg),cls:""},
+    {l:"⚠️ Alertas",v:alts.length,cls:"rojo"},
+    {l:"📅 Día mayor gasto",v:topDay[0],cls:""},
+    {l:"🏷️ Categoría líder",v:topCat[0],cls:"naranja"},
+    {l:"🏪 Comercio top",v:topMerch[0].slice(0,22),cls:"verde"},
+    {l:"💵 Total USD",v:"US$ "+fmtN(totalUS),cls:""},
+  ].map(k=>`<div class="kpi ${k.cls}"><label>${k.l}</label><div class="valor">${k.v}</div></div>`).join('');
+
+  const catData=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  mkChart('chartCat',{type:'doughnut',data:{labels:catData.map(d=>d[0]),datasets:[{data:catData.map(d=>d[1]),backgroundColor:catData.map(d=>catColor(d[0])),borderWidth:2}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11}}}},cutout:'40%'}});
+
+  const dias=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0]));
+  mkChart('chartDia',{type:'bar',data:{labels:dias.map(d=>d[0]),datasets:[{data:dias.map(d=>d[1]),backgroundColor:'#1E3A5F',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'RD$'+v.toLocaleString()}}}}});
+
+  const ultimas=[...df].reverse().slice(0,10);
+  document.getElementById('tbl-ultimas').innerHTML=th("Fecha","Hora","Comercio","Moneda","Monto","Categoría","Estado")+
+    "<tbody>"+ultimas.map(d=>tr([d.fecha,d.hora,d.comercio.slice(0,28),d.moneda,`<b>${fmt(d.monto,d.moneda)}</b>`,
+      `<span class="badge-cat" style="background:${catColor(d.categoria)}22;color:${catColor(d.categoria)}">${CAT_LABELS[d.categoria]||''} ${d.categoria}</span>`,
+      `<span class="badge-cat ${d.estado==='Aprobada'?'badge-ok':'badge-alerta'}">${d.estado}</span>`
+    ],d.alertas?"row-alerta":"")).join("")+"</tbody>";
+}
+
+// ─────────────────────────────────────────────
+// CONSUMOS
+// ─────────────────────────────────────────────
+function renderConsumos(){ buildConsumosTable(getFiltered()); }
+
+function buildConsumosTable(rows){
+  const base=getFiltered();
+  document.getElementById('consumos-count').textContent=`Mostrando ${rows.length} de ${base.length} en el período · ${DATA.length} total`;
+  document.getElementById('tbl-consumos').innerHTML=th("Fecha","Hora","Tarjeta","Moneda","Monto","Comercio","Estado","Tipo","Categoría","Alertas")+
+    "<tbody>"+rows.map(d=>tr([d.fecha,d.hora,`****${d.tarjeta}`,d.moneda,`<b>${fmt(d.monto,d.moneda)}</b>`,d.comercio,
+      `<span class="badge-cat ${d.estado==='Aprobada'?'badge-ok':'badge-alerta'}">${d.estado}</span>`,d.tipo,
+      `<span class="badge-cat" style="background:${catColor(d.categoria)}22;color:${catColor(d.categoria)}">${d.categoria}</span>`,
+      d.alertas?`<span class="badge-cat badge-alerta" title="${d.alertas}">⚠️ ${d.alertas.split("|").length}</span>`:'<span class="badge-cat badge-ok">✓</span>'
+    ],d.alertas?"row-alerta":"")).join("")+"</tbody>";
+}
+
+function filtrar(){
+  const cat=document.getElementById('f-cat').value;
+  const com=document.getElementById('f-comercio').value.toUpperCase();
+  const mon=document.getElementById('f-moneda').value;
+  buildConsumosTable(getFiltered().filter(d=>{
+    if(cat && d.categoria!==cat) return false;
+    if(com && !d.comercio.toUpperCase().includes(com)) return false;
+    if(mon && d.moneda!==mon) return false;
+    return true;
+  }));
+}
+
+function resetFiltros(){
+  document.getElementById('f-comercio').value='';
+  ['f-cat','f-moneda'].forEach(id=>document.getElementById(id).selectedIndex=0);
+  buildConsumosTable(getFiltered());
+}
+
+function initFiltros(){
+  const cats=[...new Set(DATA.map(d=>d.categoria))].sort();
+  const sel=document.getElementById('f-cat');
+  sel.innerHTML='<option value="">Todas</option>';
+  cats.forEach(c=>{ const o=document.createElement('option'); o.value=o.text=c; sel.append(o); });
+}
+
+// ─────────────────────────────────────────────
+// CATEGORÍAS
+// ─────────────────────────────────────────────
+function buildCategorias(){
+  const df=getFiltered(), rd=df.filter(d=>d.moneda==="RD");
+  const byCat={};
+  rd.forEach(d=>{ if(!byCat[d.categoria]) byCat[d.categoria]={total:0,count:0};
+    byCat[d.categoria].total+=d.monto; byCat[d.categoria].count++; });
+  const sorted=Object.entries(byCat).sort((a,b)=>b[1].total-a[1].total);
+  if(!sorted.length){ ['chartCat2','chartCatBar'].forEach(id=>{const ex=Chart.getChart(id);if(ex)ex.destroy();}); document.getElementById('tbl-cat').innerHTML='<tr><td colspan=4 style="padding:20px;color:#888">Sin datos RD$ en el período</td></tr>'; return; }
+
+  mkChart('chartCat2',{type:'pie',data:{labels:sorted.map(d=>d[0]),datasets:[{data:sorted.map(d=>d[1].total),backgroundColor:sorted.map(d=>catColor(d[0])),borderWidth:2}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
+  mkChart('chartCatBar',{type:'bar',data:{labels:sorted.map(d=>d[0]),datasets:[{data:sorted.map(d=>d[1].total),backgroundColor:sorted.map(d=>catColor(d[0])),borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'RD$'+v.toLocaleString()}}}}});
+
+  document.getElementById('tbl-cat').innerHTML=th("Categoría","Transacciones","Total RD$","Promedio RD$")+
+    "<tbody>"+sorted.map(([cat,v])=>tr([
+      `<span style="color:${catColor(cat)};font-weight:700">${CAT_LABELS[cat]||''} ${cat}</span>`,
+      v.count,`<b>RD$ ${fmtN(v.total)}</b>`,`RD$ ${fmtN(v.total/v.count)}`
+    ])).join("")+"</tbody>";
+}
+
+// ─────────────────────────────────────────────
+// POR DÍA
+// ─────────────────────────────────────────────
+function buildPorDia(){
+  const df=getFiltered(), rd=df.filter(d=>d.moneda==="RD");
+  const byDay={};
+  rd.forEach(d=>{ if(!byDay[d.fecha]) byDay[d.fecha]={total:0,count:0};
+    byDay[d.fecha].total+=d.monto; byDay[d.fecha].count++; });
+  const dias=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0]));
+  if(!dias.length){ document.getElementById('kpi-dia').innerHTML='<p style="padding:12px;color:#888">Sin datos en el período</p>'; return; }
+
+  const topDia=dias.slice().sort((a,b)=>b[1].total-a[1].total)[0];
+  const avg=dias.reduce((s,d)=>s+d[1].total,0)/dias.length;
+
+  document.getElementById('kpi-dia').innerHTML=[
+    {l:"📅 Días con consumos",v:dias.length,cls:""},
+    {l:"🏆 Día mayor gasto",v:topDia[0],cls:"naranja"},
+    {l:"💰 Mayor gasto (RD$)",v:"RD$ "+fmtN(topDia[1].total),cls:"rojo"},
+    {l:"📈 Promedio diario",v:"RD$ "+fmtN(avg),cls:"verde"},
+  ].map(k=>`<div class="kpi ${k.cls}"><label>${k.l}</label><div class="valor">${k.v}</div></div>`).join('');
+
+  mkChart('chartDia2',{type:'bar',data:{labels:dias.map(d=>d[0]),datasets:[{data:dias.map(d=>d[1].total),backgroundColor:'#1E3A5F',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'RD$'+v.toLocaleString()}}}}});
+  mkChart('chartDiaTx',{type:'bar',data:{labels:dias.map(d=>d[0]),datasets:[{data:dias.map(d=>d[1].count),backgroundColor:'#E07B39',borderRadius:4}]},options:{plugins:{legend:{display:false}}}});
+
+  document.getElementById('tbl-dia').innerHTML=th("Fecha","Transacciones","Total RD$","Promedio RD$")+
+    "<tbody>"+dias.map(([f,v])=>tr([`<b>${f}</b>`,v.count,`<b>RD$ ${fmtN(v.total)}</b>`,`RD$ ${fmtN(v.total/v.count)}`])).join("")+"</tbody>";
+}
+
+// ─────────────────────────────────────────────
+// COMERCIOS
+// ─────────────────────────────────────────────
+function buildComercios(){
+  const df=getFiltered();
+  const byM={};
+  df.forEach(d=>{ if(!byM[d.comercio]) byM[d.comercio]={cat:d.categoria,count:0,total:0};
+    byM[d.comercio].count++; if(d.moneda==="RD") byM[d.comercio].total+=d.monto; });
+  const byFreq=Object.entries(byM).sort((a,b)=>b[1].count-a[1].count);
+  const byMonto=Object.entries(byM).sort((a,b)=>b[1].total-a[1].total);
+  const top8F=byFreq.slice(0,8), top8M=byMonto.slice(0,8);
+
+  mkChart('chartFreq',{type:'bar',data:{labels:top8F.map(d=>d[0].slice(0,20)),datasets:[{data:top8F.map(d=>d[1].count),backgroundColor:top8F.map(d=>catColor(d[1].cat)),borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
+  mkChart('chartMonto',{type:'bar',data:{labels:top8M.map(d=>d[0].slice(0,20)),datasets:[{data:top8M.map(d=>d[1].total),backgroundColor:top8M.map(d=>catColor(d[1].cat)),borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'RD$'+v.toLocaleString()}}}}});
+
+  document.getElementById('tbl-comercios').innerHTML=th("Comercio","Categoría","Visitas","Total RD$","Promedio RD$")+
+    "<tbody>"+byFreq.map(([com,v])=>tr([`<b>${com}</b>`,
+      `<span class="badge-cat" style="background:${catColor(v.cat)}22;color:${catColor(v.cat)}">${v.cat}</span>`,
+      v.count, v.total>0?`RD$ ${fmtN(v.total)}`:"—", v.total>0?`RD$ ${fmtN(v.total/v.count)}`:"—"
+    ])).join("")+"</tbody>";
+}
+
+// ─────────────────────────────────────────────
+// ALERTAS
+// ─────────────────────────────────────────────
+function buildAlertas(){
+  const df=getFiltered(), alts=df.filter(d=>d.alertas);
+  if(!alts.length){
+    document.getElementById('kpi-alertas').innerHTML='';
+    document.getElementById('alerta-tipos').innerHTML='<p style="color:var(--verde);padding:16px;font-weight:600">✅ Sin alertas en el período seleccionado.</p>';
+    document.getElementById('tbl-alertas').innerHTML=''; return;
+  }
+  const montoAlts=alts.filter(d=>d.moneda==="RD").reduce((s,d)=>s+d.monto,0);
+  const diasAlts=new Set(alts.map(d=>d.fecha)).size;
+
+  document.getElementById('kpi-alertas').innerHTML=[
+    {l:"⚠️ Total alertas",v:alts.length,cls:"rojo"},
+    {l:"💰 Monto alertado (RD$)",v:"RD$ "+fmtN(montoAlts),cls:""},
+    {l:"📅 Días con alertas",v:diasAlts,cls:"naranja"},
+  ].map(k=>`<div class="kpi ${k.cls}"><label>${k.l}</label><div class="valor">${k.v}</div></div>`).join('');
+
+  const tipoCount={};
+  alts.forEach(d=>d.alertas.split(" | ").forEach(a=>{tipoCount[a]=(tipoCount[a]||0)+1;}));
+  const tipoSort=Object.entries(tipoCount).sort((a,b)=>b[1]-a[1]);
+  const maxT=tipoSort[0][1];
+  document.getElementById('alerta-tipos').innerHTML=tipoSort.map(([t,c])=>`
+    <div class="alerta-tipo"><span>${t}</span><span class="alert-count">${c}</span>
+    <div style="margin-top:6px;background:#eee;border-radius:999px;height:8px;overflow:hidden">
+    <div style="background:var(--rojo);height:100%;width:${c/maxT*100}%;border-radius:999px;transition:.4s"></div></div></div>`).join('');
+
+  document.getElementById('tbl-alertas').innerHTML=th("Fecha","Hora","Comercio","Moneda","Monto","Categoría","Tipo","Alerta(s)")+
+    "<tbody>"+alts.map(d=>tr([d.fecha,d.hora,d.comercio.slice(0,24),d.moneda,`<b>${fmt(d.monto,d.moneda)}</b>`,
+      `<span class="badge-cat" style="background:${catColor(d.categoria)}22;color:${catColor(d.categoria)}">${d.categoria}</span>`,
+      d.tipo,`<span class="badge-cat badge-alerta">⚠️ ${d.alertas}</span>`
+    ],"row-alerta")).join("")+"</tbody>";
+}
+
+// ─────────────────────────────────────────────
+// EXPORTAR
+// ─────────────────────────────────────────────
+function buildExport(){
+  const df=getFiltered();
+  document.getElementById('tbl-export').innerHTML=th("Fecha","Hora","Tarjeta","Moneda","Monto","Comercio","Estado","Tipo","Categoría","Alertas")+
+    "<tbody>"+df.slice(0,15).map(d=>tr([d.fecha,d.hora,`****${d.tarjeta}`,d.moneda,fmt(d.monto,d.moneda),
+      d.comercio,d.estado,d.tipo,d.categoria,d.alertas||""
+    ])).join("")+"</tbody>";
+}
+
+function exportarCSV(){
+  const df=getFiltered();
+  const headers=["Fecha","Hora","Tarjeta","Moneda","Monto","Comercio","Estado","Tipo","Categoría","Alertas"];
+  const rows=df.map(d=>[d.fecha,d.hora,`****${d.tarjeta}`,d.moneda,d.monto,d.comercio,d.estado,d.tipo,d.categoria,d.alertas||""]
+    .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","));
+  const csv=[headers.join(","),...rows].join("\n");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=`consumos_bhd_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+// ─────────────────────────────────────────────
+// CARGA DE DATOS Y SINCRONIZACIÓN
+// ─────────────────────────────────────────────
+function initState(){
+  buildCatColors();
+  _allISO = DATA.map(d=>d.fecha.split('/').reverse().join('-')).sort();
+  gDesde  = _allISO[0]||''; gHasta = _allISO[_allISO.length-1]||'';
+  document.getElementById('g-desde').value=gDesde;
+  document.getElementById('g-hasta').value=gHasta;
+  updateBadge(); initFiltros(); buildDashboard();
+}
+
+async function loadData(){
+  try {
+    const res = await fetch('/api/data');
+    if(!res.ok) throw new Error('no server');
+    DATA = await res.json();
+    document.getElementById('sync-btn').style.display='';
+  } catch(e){
+    document.getElementById('sync-btn').textContent='📂 Datos locales';
+    document.getElementById('sync-btn').disabled=true;
+  }
+  initState();
+}
+
+async function syncData(){
+  const btn=document.getElementById('sync-btn');
+  btn.textContent='⏳ Conectando Gmail...'; btn.disabled=true;
+  try {
+    const res=await fetch('/api/sync',{method:'POST'});
+    const r=await res.json();
+    if(r.ok){
+      const prev=DATA.length;
+      const d=await fetch('/api/data'); DATA=await d.json();
+      initState(); renderCurrentPage();
+      const diff=DATA.length-prev;
+      btn.textContent=diff>0?`✅ +${diff} nuevas`:'✅ Al día';
+    } else {
+      btn.textContent=`❌ ${r.error||'Error'}`;
+    }
+  } catch(e){ btn.textContent='❌ Sin conexión al servidor'; }
+  setTimeout(()=>{ btn.textContent='🔄 Sincronizar Gmail'; btn.disabled=false; },4000);
+}
+
+loadData();
+</script>
+</body>
+</html>
