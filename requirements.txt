@@ -1,0 +1,10 @@
+pandas==2.2.2
+openpyxl==3.1.5
+python-dotenv==1.0.1
+google-api-python-client==2.134.0
+google-auth==2.30.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+beautifulsoup4==4.12.3
+lxml==5.2.2
+flask==3.0.3

@@ -1,0 +1,95 @@
+name: Sync BHD y actualizar GitHub Pages
+
+on:
+  schedule:
+    # Cada 2 horas entre 8am y 10pm (hora República Dominicana = UTC-4)
+    - cron: '0 12,14,16,18,20,22,0,2 * * *'
+  workflow_dispatch:  # También se puede correr manualmente desde GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Restaurar credenciales Gmail
+        run: |
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" | base64 -d > credentials.json
+          echo "${{ secrets.GOOGLE_TOKEN }}" | base64 -d > token.json
+
+      - name: Crear carpeta de datos
+        run: mkdir -p data
+
+      - name: Sincronizar Gmail
+        env:
+          DATABASE_PATH: data/consumos.db
+          GMAIL_MAX_RESULTS: 500
+        run: |
+          python3 -c "
+          import sys, os
+          sys.path.insert(0, '.')
+          from src.sync import sincronizar
+          n, o = sincronizar()
+          print(f'Nuevas: {n} | Omitidas: {o}')
+          "
+
+      - name: Regenerar HTML
+        env:
+          DATABASE_PATH: data/consumos.db
+        run: |
+          python3 -c "
+          import sqlite3, json, re, os
+
+          db = os.getenv('DATABASE_PATH', 'data/consumos.db')
+          conn = sqlite3.connect(db)
+          rows = conn.execute('''
+              SELECT fecha,hora,tarjeta,moneda,monto,comercio,estado,tipo,categoria,alertas
+              FROM consumos
+              ORDER BY substr(fecha,7,4)||\"-\"||substr(fecha,4,2)||\"-\"||substr(fecha,1,2) DESC, hora DESC
+          ''').fetchall()
+          conn.close()
+
+          records = [{'fecha':r[0],'hora':r[1],'tarjeta':r[2],'moneda':r[3],'monto':r[4],
+                      'comercio':r[5],'estado':r[6],'tipo':r[7],'categoria':r[8],'alertas':r[9] or ''} for r in rows]
+
+          js_data = 'let DATA = ' + json.dumps(records, ensure_ascii=False, indent=2) + ';'
+
+          with open('simulador_bhd.html', 'r', encoding='utf-8') as f:
+              html = f.read()
+          html = re.sub(r'let DATA = \[[\s\S]*?\];', js_data, html, count=1)
+          with open('simulador_bhd.html', 'w', encoding='utf-8') as f:
+              f.write(html)
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(html)
+          print(f'HTML generado: {len(records)} transacciones')
+          print(f'Más reciente: {records[0][\"fecha\"]} - {records[0][\"comercio\"]}')
+          "
+
+      - name: Push a GitHub Pages (si hay cambios)
+        run: |
+          git config user.name "BHD Auto-Sync"
+          git config user.email "noreply@github.com"
+          git add index.html simulador_bhd.html
+          if git diff --staged --quiet; then
+            echo "Sin cambios nuevos."
+          else
+            FECHA=$(date '+%d/%m/%Y %H:%M')
+            git commit -m "Auto-sync $FECHA"
+            git push
+            echo "Push OK"
+          fi
