@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Junté en Vivo · CND 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<!-- ═══ ADMIN BADGE ════════════════════════════════════════════════════════ -->
+<div class="admin-badge" id="adminBadge" style="display:none">
+  🔐 Modo Admin activo &nbsp;·&nbsp;
+  <button onclick="addActivity()">➕ Actividad</button>
+  <button onclick="showActivityManager()">⚙️ Gestionar</button>
+  <button onclick="JunteAuth.logoutAccount()">Salir</button>
+</div>
+<div id="activityManager" style="display:none"></div>
+
+<!-- ═══ NAV ════════════════════════════════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-brand">
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <span class="nav-logo-text">CND</span>
+      <span class="nav-divider">|</span>
+      <span class="nav-title">Junté Familiar 2026</span>
+    </a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/">Inicio</a></li>
+    <li><a href="/#mural">Mural</a></li>
+    <li><a href="/live" class="active-nav">📸 Live</a></li>
+    <li><a href="/#itinerario">Itinerario</a></li>
+    <li><a href="/#villas">Villas</a></li>
+    <li><a href="/#menu">Menú</a></li>
+    <li><a href="/#historia">Historia</a></li>
+    <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ LIVE HERO ══════════════════════════════════════════════════════════ -->
+<section class="live-hero">
+  <div class="live-hero-content fade-in">
+    <div class="live-pulse-badge"><span class="pulse-dot"></span> EN VIVO · Oct 16–18</div>
+    <h1>📸 JUNTÉ <span class="gold">EN VIVO</span></h1>
+    <p>Comparte tus momentos. La familia te está mirando.</p>
+    <button class="btn-hero" id="btnOpenLiveUpload">📷 Subir foto del momento</button>
+    <p class="live-hero-count" id="liveHeroCount"></p>
+  </div>
+</section>
+
+<!-- ═══ ACCESO ═══════════════════════════════════════════════════════════ -->
+<div id="liveGateWrap" style="display:none;max-width:700px;margin:32px auto"></div>
+
+<!-- ═══ FILTER BAR (sticky) ═══════════════════════════════════════════════ -->
+<div class="live-filter-section">
+  <div class="live-filter-inner">
+    <div class="live-filter-bar" id="liveFilterBar"></div>
+  </div>
+</div>
+
+<!-- ═══ FEED ═══════════════════════════════════════════════════════════════ -->
+<section class="live-feed-section" id="liveFeedSection">
+  <div class="live-feed-inner">
+    <div id="liveFeed" class="live-feed-grid"></div>
+    <div id="liveFeedEmpty" class="live-feed-empty" style="display:none">
+      <div class="empty-icon">📷</div>
+      <p>Aún no hay fotos. ¡Sé el primero en compartir un momento!</p>
+      <button class="btn-hero" onclick="openLiveUploadModal(null)" style="margin-top:20px">
+        Subir primera foto
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MODAL UPLOAD ══════════════════════════════════════════════════════ -->
+<div class="overlay-modal" id="liveUploadModal">
+  <div class="overlay-modal-bg" id="liveUploadModalBg"></div>
+  <div class="overlay-modal-box upload-box-modal">
+    <button class="modal-close-x" id="btnCancelLiveUpload">&times;</button>
+    <h3>📷 Subir foto del momento</h3>
+    <div class="upload-form">
+      <label>Familia</label>
+      <p class="upload-familia-fixed" id="liveFamiliaLabel"></p>
+      <label>Actividad</label>
+      <select id="liveActividadSelect" class="select-input"></select>
+      <label>Foto</label>
+      <label class="file-label" for="livePhotoInput">
+        📁 Elegir imagen
+        <input type="file" id="livePhotoInput" accept="image/*" capture="environment" hidden />
+      </label>
+      <img id="liveImgPreview" src="" alt="Vista previa" style="display:none" class="upload-preview-img" />
+      <label>Comentario (opcional)</label>
+      <textarea id="liveCommentInput" placeholder="¿Qué está pasando? Comparte el momento..." class="textarea-input" rows="2"></textarea>
+      <p class="upload-status-msg" id="liveStatusMsg"></p>
+      <button class="btn-primary" id="btnDoLiveUpload">Subir foto ↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL VER FOTO ════════════════════════════════════════════════════ -->
+<div class="overlay-modal photo-view-modal" id="livePhotoModal">
+  <div class="overlay-modal-bg" id="livePhotoModalBg"></div>
+  <div class="overlay-modal-box photo-view-box">
+    <button class="modal-close-x" id="livePhotoModalClose">&times;</button>
+    <div class="photo-view-layout">
+      <div class="photo-view-img-side">
+        <img id="liveModalImg" src="" alt="" />
+        <a id="liveModalDownload" href="#" class="btn-download" target="_blank">⬇️ Descargar</a>
+      </div>
+      <div class="photo-view-info-side">
+        <div class="photo-meta">
+          <h3 id="liveModalFamilia"></h3>
+          <span class="photo-year-badge live-act-badge" id="liveModalActividad"></span>
+        </div>
+        <p class="photo-desc" id="liveModalDesc"></p>
+        <p class="photo-fecha" id="liveModalFecha"></p>
+
+        <div class="likes-area">
+          <button class="btn-like" id="liveBtnLike">❤️ 0 likes</button>
+          <div id="liveLikeNames"></div>
+        </div>
+
+        <div class="comments-area">
+          <h4>Comentarios</h4>
+          <div class="comments-list" id="liveCommentsList"></div>
+          <div class="comment-form">
+            <textarea id="liveCommentTexto" placeholder="Escribe un comentario..." class="textarea-input" rows="2"></textarea>
+            <button class="btn-primary" id="liveBtnComment">Comentar</button>
+          </div>
+        </div>
+
+        <div class="live-admin-delete" id="liveAdminDelete" style="display:none">
+          <button class="btn-admin-sm danger" onclick="deleteLivePhoto()">🗑️ Eliminar esta foto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="static/js/firebase-init.js"></script>
+<script src="static/js/auth.js"></script>
+<script src="static/js/image-compress.js"></script>
+<script src="static/js/live.js"></script>
+</body>
+</html>

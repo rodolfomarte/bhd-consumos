@@ -1,0 +1,54 @@
+rules_version = '2';
+
+// No cross-service Firestore reads here on purpose: the local Emulator
+// Suite does not support them (verified by hand), and relying on a feature
+// we can't test before publishing isn't worth it. Approval status and
+// family are mirrored onto the Auth custom claims by the server
+// (netlify/functions/set-user-status.js) every time an admin changes a
+// user's status, so these rules only ever read request.auth.token.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    // Custom claims are ABSENT (not just false) for anyone who has never
+    // had them set — accessing them directly throws in this rules engine,
+    // so guard with 'in' first.
+    function isAdmin() {
+      return isSignedIn() && ('admin' in request.auth.token) && request.auth.token.admin == true;
+    }
+    function emailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+    function isApprovedVerified() {
+      return isSignedIn() && emailVerified()
+        && ('approved' in request.auth.token) && request.auth.token.approved == true;
+    }
+    function myFamilia() {
+      return ('familia' in request.auth.token) ? request.auth.token.familia : null;
+    }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    // mural/<familia>/<anio>  (one slot per family per year)
+    match /mural/{familia}/{anio} {
+      allow read: if isAdmin() || isApprovedVerified();
+      allow write: if isAdmin()
+        || (isApprovedVerified() && familia == myFamilia() && isImage());
+    }
+
+    // live/<photoId>  (one object per shared "live" photo)
+    match /live/{photoId} {
+      allow read: if isAdmin() || isApprovedVerified();
+      allow write: if isAdmin() || (isApprovedVerified() && isImage());
+      allow delete: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

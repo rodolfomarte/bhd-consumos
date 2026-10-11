@@ -1,0 +1,21 @@
+{
+  "name": "junte-familiar",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Junte Familiar CND 2026 - registro, aprobacion manual y galerias por familia",
+  "scripts": {
+    "emulators": "firebase emulators:start --only auth,firestore,storage",
+    "test:rules": "npm run test:rules:firestore && npm run test:rules:storage",
+    "test:rules:firestore": "firebase emulators:exec --only auth,firestore,storage \"node --test tests/rules.test.js\"",
+    "test:rules:storage": "firebase emulators:exec --only storage \"node --test tests/storage-rules.test.js\"",
+    "test:unit": "node --test tests/storage-usage.test.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "resend": "^4.0.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase-tools": "^13.29.1"
+  }
+}

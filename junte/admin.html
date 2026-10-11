@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Admin · Junté Familiar CND 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-brand">
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <span class="nav-logo-text">CND</span>
+      <span class="nav-divider">|</span>
+      <span class="nav-title">Junté Familiar 2026</span>
+    </a>
+  </div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/">Inicio</a></li>
+    <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+  </ul>
+</nav>
+
+<section class="section admin-panel-section">
+
+  <div id="adminLoading" class="account-loading">Cargando…</div>
+
+  <div id="adminDenied" class="status-card" style="display:none">
+    <h3>🔒 Acceso restringido</h3>
+    <p>Esta página es solo para el administrador del Junté. <a href="/cuenta">Inicia sesión</a> con la cuenta de administrador.</p>
+  </div>
+
+  <div id="adminContent" style="display:none">
+    <div class="section-header">
+      <h2 class="section-title">Panel de Administrador</h2>
+      <p class="section-sub">Aprueba, rechaza o suspende cuentas · Controla la galería general</p>
+    </div>
+
+    <div class="admin-settings-card">
+      <label class="switch-row">
+        <input type="checkbox" id="galleryToggle" />
+        <span>Galería general habilitada para usuarios aprobados (ver fotos de <em>todas</em> las familias)</span>
+      </label>
+      <p class="account-msg" id="gallerySettingMsg"></p>
+    </div>
+
+    <div class="admin-settings-card storage-widget">
+      <div class="storage-widget-header">
+        <h3>📦 Almacenamiento de fotos</h3>
+        <button class="btn-secondary" id="btnRefreshStorage" style="padding:6px 14px;font-size:.78rem">🔄 Actualizar</button>
+      </div>
+      <div class="storage-bar-bg">
+        <div class="storage-bar-fill" id="storageProgressBar" style="width:0%"></div>
+      </div>
+      <div class="storage-widget-stats">
+        <span><strong id="storageUsedLabel">—</strong> usados</span>
+        <span><strong id="storagePercentLabel">—</strong></span>
+        <span><strong id="storageAvailableLabel">—</strong> disponibles</span>
+        <span>Límite: <strong id="storageLimitLabel">—</strong></span>
+      </div>
+      <p class="account-msg" id="storageWidgetMsg"></p>
+    </div>
+
+    <div class="admin-user-groups">
+      <div class="admin-group">
+        <h3>⏳ Pendientes (<span id="countPending">0</span>)</h3>
+        <div id="listPending" class="admin-user-list"></div>
+      </div>
+      <div class="admin-group">
+        <h3>✅ Aprobados (<span id="countApproved">0</span>)</h3>
+        <div id="listApproved" class="admin-user-list"></div>
+      </div>
+      <div class="admin-group">
+        <h3>❌ Rechazados (<span id="countRejected">0</span>)</h3>
+        <div id="listRejected" class="admin-user-list"></div>
+      </div>
+      <div class="admin-group">
+        <h3>🚫 Suspendidos (<span id="countSuspended">0</span>)</h3>
+        <div id="listSuspended" class="admin-user-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="static/js/firebase-init.js"></script>
+<script src="static/js/auth.js"></script>
+<script src="static/js/admin.js"></script>
+</body>
+</html>

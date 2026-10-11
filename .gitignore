@@ -1,8 +1,19 @@
 credentials.json
 token.json
+GOOGLE_TOKEN.base64.txt
 .env
 data/
 exports/
 __pycache__/
 *.pyc
 .DS_Store
+
+# junte/ (Node, Firebase CLI, Netlify CLI)
+node_modules/
+.firebase/
+.netlify/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+*.local.json

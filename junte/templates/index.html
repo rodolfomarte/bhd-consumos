@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Junté Familiar CND 2026 – Rancho Las Guazaras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<!-- ═══ ADMIN BADGE ══════════════════════════════════════════════════════ -->
+<div class="admin-badge" id="adminBadge" style="display:none">
+  🔐 Modo Admin activo &nbsp;·&nbsp;
+  <button onclick="saveAdminData()">💾 Guardar</button>
+  <button onclick="JunteAuth.logoutAccount()">Salir</button>
+</div>
+
+<!-- ═══ NAV ══════════════════════════════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-brand">
+    <span class="nav-logo-text">CND</span>
+    <span class="nav-divider">|</span>
+    <span class="nav-title">Junté Familiar 2026</span>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#portada">Inicio</a></li>
+    <li><a href="#mural">Mural</a></li>
+    <li><a href="/live">📸 Live</a></li>
+    <li><a href="#itinerario">Itinerario</a></li>
+    <li><a href="#villas">Villas</a></li>
+    <li><a href="#mapa">🗺️ Mapa</a></li>
+    <li><a href="#menu">Menú</a></li>
+    <li><a href="#historia">Historia</a></li>
+    <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ PORTADA HERO ══════════════════════════════════════════════════════ -->
+<section id="portada" class="hero">
+  <div class="hero-img-wrap">
+    <img src="static/img/flyer.png" alt="Junté Familiar CND 2026" class="hero-flyer" />
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content fade-in">
+    <div class="hero-badge">Logística CND</div>
+    <h1 class="hero-title">JUNTÉ <span class="gold">FAMILIAR</span></h1>
+    <p class="hero-date">16 de Octubre 2026</p>
+    <p class="hero-lugar">Rancho Las Guazaras · Jarabacoa</p>
+    <div class="countdown" id="countdown">
+      <div class="cd-block"><span id="cd-dias">--</span><small>Días</small></div>
+      <div class="cd-block"><span id="cd-horas">--</span><small>Horas</small></div>
+      <div class="cd-block"><span id="cd-min">--</span><small>Min</small></div>
+      <div class="cd-block"><span id="cd-seg">--</span><small>Seg</small></div>
+    </div>
+    <a href="#mural" class="btn-hero">Ver Mural de Recuerdos ↓</a>
+  </div>
+</section>
+
+<!-- ═══ MURAL ══════════════════════════════════════════════════════════════ -->
+<section id="mural" class="mural-section">
+  <div class="mural-inner">
+    <div class="section-header">
+      <h2 class="section-title editable" data-key="mural-titulo">Mural de Recuerdos</h2>
+      <p class="section-slogan gold editable" data-key="mural-slogan">Los años pasan. La familia crece.</p>
+      <p class="section-sub editable" data-key="mural-sub">Una foto por familia, un año a la vez. Los recuerdos que nos hacen familia.</p>
+    </div>
+
+    <!-- Acceso -->
+    <div id="muralGateWrap" style="display:none"></div>
+
+    <!-- Progreso -->
+    <div class="mural-progress-wrap">
+      <span id="muralProgress">Cargando...</span>
+      <div class="mural-progress-bar-bg">
+        <div class="mural-progress-bar-fill" id="muralProgressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Botón subir -->
+    <div class="mural-upload-btn-wrap">
+      <button class="btn-upload-main" id="btnOpenUpload">📷 Subir foto de tu familia</button>
+    </div>
+
+    <!-- Grid familia × año -->
+    <div id="muralGridWrap"></div>
+  </div>
+</section>
+
+<!-- ═══ MODAL UPLOAD ══════════════════════════════════════════════════════ -->
+<div class="overlay-modal" id="uploadModal">
+  <div class="overlay-modal-bg" id="uploadModalBg"></div>
+  <div class="overlay-modal-box upload-box-modal">
+    <button class="modal-close-x" id="btnCancelUpload">&times;</button>
+    <h3>Subir foto familiar</h3>
+    <div class="upload-form">
+      <label>Familia</label>
+      <p class="upload-familia-fixed" id="uploadFamiliaLabel"></p>
+      <label>Año</label>
+      <select id="uploadAnioSelect" class="select-input">
+        <option value="2020">2020</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025" selected>2025</option>
+      </select>
+      <label>Foto</label>
+      <label class="file-label" for="photoFileInput">
+        📁 Elegir imagen
+        <input type="file" id="photoFileInput" accept="image/*" capture="environment" hidden />
+      </label>
+      <img id="uploadImgPreview" src="" alt="Vista previa" style="display:none" class="upload-preview-img" />
+      <label>Descripción (opcional)</label>
+      <textarea id="uploadDescInput" placeholder="Un mensaje para la familia..." class="textarea-input" rows="2"></textarea>
+      <p class="upload-status-msg" id="uploadStatusMsg"></p>
+      <button class="btn-primary" id="btnDoUpload">Subir foto ↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL VER FOTO ════════════════════════════════════════════════════ -->
+<div class="overlay-modal photo-view-modal" id="photoModal">
+  <div class="overlay-modal-bg" id="photoModalBg"></div>
+  <div class="overlay-modal-box photo-view-box">
+    <button class="modal-close-x" id="photoModalClose">&times;</button>
+    <div class="photo-view-layout">
+      <div class="photo-view-img-side">
+        <img id="modalImg" src="" alt="" />
+        <a id="modalDownload" href="#" class="btn-download" download>⬇️ Descargar</a>
+      </div>
+      <div class="photo-view-info-side">
+        <div class="photo-meta">
+          <h3 id="modalFamilia"></h3>
+          <span class="photo-year-badge" id="modalAnio"></span>
+        </div>
+        <p class="photo-desc" id="modalDesc"></p>
+
+        <!-- Likes -->
+        <div class="likes-area">
+          <button class="btn-like" id="btnLike">❤️ 0 likes</button>
+          <div id="likeNames"></div>
+        </div>
+
+        <!-- Comments -->
+        <div class="comments-area">
+          <h4>Comentarios</h4>
+          <div class="comments-list" id="commentsList"></div>
+          <div class="comment-form">
+            <textarea id="commentTexto" placeholder="Escribe un comentario..." class="textarea-input" rows="2"></textarea>
+            <button class="btn-primary" id="btnComment">Comentar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ITINERARIO ════════════════════════════════════════════════════════ -->
+<section id="itinerario" class="section itinerario-section">
+  <div class="section-header">
+    <h2 class="section-title editable" data-key="itin-titulo">Itinerario</h2>
+    <p class="section-sub editable" data-key="itin-sub">Tres días llenos de familia, diversión y recuerdos</p>
+  </div>
+  <div class="day-tabs">
+    <button class="day-tab active" data-day="viernes">Viernes 16</button>
+    <button class="day-tab" data-day="sabado">Sábado 17</button>
+    <button class="day-tab" data-day="domingo">Domingo 18</button>
+  </div>
+  <div class="day-panel active" id="panel-viernes"><div class="timeline" id="timeline-viernes"></div></div>
+  <div class="day-panel" id="panel-sabado"><div class="timeline" id="timeline-sabado"></div></div>
+  <div class="day-panel" id="panel-domingo"><div class="timeline" id="timeline-domingo"></div></div>
+  <div class="actividades-extra">
+    <h3 class="editable" data-key="act-titulo">Actividades disponibles</h3>
+    <div class="act-grid">
+      <div class="act-item">🏟️ Inflables</div>
+      <div class="act-item">⚽ Cancha de Fútbol</div>
+      <div class="act-item">🎤 Karaoke</div>
+      <div class="act-item">🎬 Cine al Aire Libre</div>
+      <div class="act-item">🏊 Pool Party</div>
+      <div class="act-item">🥾 Senderismo</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ VILLAS ════════════════════════════════════════════════════════════ -->
+<section id="villas" class="villas-section">
+  <div class="section-header">
+    <h2 class="section-title editable" data-key="villas-titulo">Nuestras Villas</h2>
+    <p class="section-sub editable" data-key="villas-sub">Rancho Las Guazaras · Tu hogar por el fin de semana</p>
+  </div>
+  <div class="villas-grid" id="villasGrid"></div>
+  <div class="admin-only" style="display:none" id="btnAddVilla">
+    <button class="btn-admin-add" onclick="addVilla()">+ Agregar villa</button>
+  </div>
+</section>
+
+<!-- ═══ MAPA ══════════════════════════════════════════════════════════════ -->
+<section id="mapa" class="mapa-section section">
+  <div class="section-header">
+    <h2 class="section-title editable" data-key="mapa-titulo">Mapa del Rancho</h2>
+    <p class="section-sub editable" data-key="mapa-sub">Rancho Las Guazaras · Jarabacoa — Encuentra tu villa</p>
+  </div>
+  <div class="mapa-layout">
+    <div class="mapa-embed-wrap">
+      <img src="static/img/mapa.png"
+           alt="Mapa Rancho Las Guazaras" class="mapa-img" />
+    </div>
+    <div class="mapa-leyenda reveal">
+      <h3 class="mapa-leyenda-title">📍 Leyenda</h3>
+      <div class="mapa-leyenda-list">
+        <div class="leyenda-group">
+          <div class="leyenda-group-label">🏠 Villas</div>
+          <div class="leyenda-item"><span class="leyenda-num villa-num">1</span><span class="editable" data-key="ley-1">Villa Pérez</span></div>
+          <div class="leyenda-item"><span class="leyenda-num villa-num">2</span><span class="editable" data-key="ley-2">Villa Café</span></div>
+          <div class="leyenda-item"><span class="leyenda-num villa-num">3</span><span class="editable" data-key="ley-3">Villa Bosque</span></div>
+          <div class="leyenda-item"><span class="leyenda-num villa-num">4</span><span class="editable" data-key="ley-4">Villa Cereza</span></div>
+          <div class="leyenda-item"><span class="leyenda-num villa-num">5</span><span class="editable" data-key="ley-5">Villa Palmera</span></div>
+        </div>
+        <div class="leyenda-group">
+          <div class="leyenda-group-label">🏛️ Áreas comunes</div>
+          <div class="leyenda-item"><span class="leyenda-num area-num">6</span><span class="editable" data-key="ley-6">Área Deportiva</span></div>
+          <div class="leyenda-item"><span class="leyenda-num area-num">7</span><span class="editable" data-key="ley-7">Cocina Central</span></div>
+          <div class="leyenda-item"><span class="leyenda-num area-num">8</span><span class="editable" data-key="ley-8">Lobby</span></div>
+          <div class="leyenda-item"><span class="leyenda-num area-num">9</span><span class="editable" data-key="ley-9">Área Cine Aire Libre</span></div>
+          <div class="leyenda-item"><span class="leyenda-num area-num">0</span><span class="editable" data-key="ley-0">Área Fogata</span></div>
+        </div>
+      </div>
+      <a href="https://maps.google.com/maps?q=Rancho+Las+Guazaras,+Jarabacoa,+Dominican+Republic"
+         target="_blank" rel="noopener" class="mapa-open-link">
+        Ver en Google Maps ↗
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MENÚ ══════════════════════════════════════════════════════════════ -->
+<section id="menu" class="section menu-section">
+  <div class="section-header">
+    <h2 class="section-title editable" data-key="menu-titulo">Menú del Junte</h2>
+    <p class="section-sub editable" data-key="menu-sub">Sabor dominicano para toda la familia</p>
+  </div>
+  <div class="day-tabs">
+    <button class="day-tab active" data-menu="viernes">Viernes 16</button>
+    <button class="day-tab" data-menu="sabado">Sábado 17</button>
+    <button class="day-tab" data-menu="domingo">Domingo 18</button>
+  </div>
+  <div class="menu-panel active" id="menu-viernes"><div class="menu-cols" id="menu-cols-viernes"></div></div>
+  <div class="menu-panel" id="menu-sabado"><div class="menu-cols" id="menu-cols-sabado"></div></div>
+  <div class="menu-panel" id="menu-domingo"><div class="menu-cols" id="menu-cols-domingo"></div></div>
+</section>
+
+<!-- ═══ HISTORIA ══════════════════════════════════════════════════════════ -->
+<section id="historia" class="historia-section">
+  <div class="historia-bg-overlay"></div>
+  <div class="historia-content">
+    <div class="section-header">
+      <h2 class="section-title light editable" data-key="hist-titulo">Nuestra Historia</h2>
+      <p class="section-sub light editable" data-key="hist-sub">Logística CND · Una familia que crece junta</p>
+    </div>
+    <div class="historia-text">
+      <p class="editable" data-key="hist-p1">Logística CND nació del sueño de brindarle soluciones logísticas al mercado dominicano. Pero más allá de los camiones y las rutas, lo que realmente nos mueve es nuestra gente — la familia CND.</p>
+      <p class="editable" data-key="hist-p2">El Junté Familiar es nuestra celebración anual donde dejamos el trabajo atrás y nos encontramos como lo que somos: una familia. Este año, en el Rancho Las Guazaras de Jarabacoa, vivimos tres días que quedarán grabados en el corazón de todos.</p>
+      <p class="editable" data-key="hist-p3">Tres días para compartir, reír y fortalecer lo más importante: <strong>Nuestra Familia.</strong></p>
+    </div>
+    <div class="historia-stats">
+      <div class="stat-box"><span class="stat-num editable" data-key="stat-familias">5</span><span class="stat-label">Villas</span></div>
+      <div class="stat-box"><span class="stat-num editable" data-key="stat-personas">70+</span><span class="stat-label">Personas</span></div>
+      <div class="stat-box"><span class="stat-num editable" data-key="stat-dias">3</span><span class="stat-label">Días</span></div>
+      <div class="stat-box"><span class="stat-num editable" data-key="stat-anos">1er</span><span class="stat-label">Junté</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junté Familiar 2026</p>
+    <p class="footer-lugar">📍 Rancho Las Guazaras, Jarabacoa</p>
+    <p class="footer-fecha">16 de Octubre 2026</p>
+    <p class="footer-copy editable" data-key="footer-copy">Hecho con ❤️ por la familia CND</p>
+  </div>
+</footer>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="static/js/firebase-init.js"></script>
+<script src="static/js/auth.js"></script>
+<script src="static/js/families-roster.js"></script>
+<script src="static/js/image-compress.js"></script>
+<script src="static/js/main.js"></script>
+</body>
+</html>

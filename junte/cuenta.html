@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Cuenta · Junté Familiar CND 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-brand">
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <span class="nav-logo-text">CND</span>
+      <span class="nav-divider">|</span>
+      <span class="nav-title">Junté Familiar 2026</span>
+    </a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/">Inicio</a></li>
+    <li><a href="/#mural">Mural</a></li>
+    <li><a href="/live">📸 Live</a></li>
+    <li><a href="/cuenta" class="active-nav">👤 Mi Cuenta</a></li>
+  </ul>
+</nav>
+
+<section class="section account-section">
+  <div class="account-box">
+
+    <div id="authLoading" class="account-loading">Cargando…</div>
+
+    <!-- ═══ LOGGED OUT: login / registro ═══ -->
+    <div id="authForms" style="display:none">
+      <div class="account-tabs">
+        <button class="account-tab active" id="tabLogin">Iniciar sesión</button>
+        <button class="account-tab" id="tabRegister">Crear cuenta</button>
+      </div>
+
+      <form id="loginForm" class="account-form">
+        <label>Correo</label>
+        <input type="email" id="loginEmail" class="input-inline" required />
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" class="input-inline" required />
+        <p class="account-error" id="loginError" style="display:none"></p>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:10px">Entrar</button>
+      </form>
+
+      <form id="registerForm" class="account-form" style="display:none">
+        <label>Nombre completo</label>
+        <input type="text" id="regNombre" class="input-inline" maxlength="80" required />
+        <label>Familia</label>
+        <select id="regFamilia" class="select-input" required>
+          <option value="">— Selecciona tu familia —</option>
+        </select>
+        <label>Correo</label>
+        <input type="email" id="regEmail" class="input-inline" required />
+        <label>Contraseña</label>
+        <input type="password" id="regPassword" class="input-inline" minlength="6" required />
+        <p class="account-hint">Mínimo 6 caracteres.</p>
+        <p class="account-error" id="registerError" style="display:none"></p>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:10px">Crear cuenta</button>
+      </form>
+    </div>
+
+    <!-- ═══ LOGGED IN: estado de la cuenta ═══ -->
+    <div id="accountStatus" style="display:none">
+      <div id="statusVerify" class="status-card" style="display:none">
+        <h3>📧 Verifica tu correo</h3>
+        <p>Te enviamos un correo de verificación. Haz clic en el enlace y luego presiona el botón de abajo.</p>
+        <button class="btn-primary" id="btnResendVerify">Reenviar correo</button>
+        <button class="btn-secondary" id="btnCheckVerify" style="margin-top:8px">Ya verifiqué mi correo</button>
+        <p class="account-msg" id="verifyMsg"></p>
+      </div>
+
+      <div id="statusPending" class="status-card" style="display:none">
+        <h3>⏳ Pendiente de aprobación</h3>
+        <p>Hola <strong id="pendingNombre"></strong>, tu cuenta de la familia <strong id="pendingFamilia"></strong> está
+           esperando que un administrador la apruebe. Te avisaremos por correo cuando esté lista.</p>
+      </div>
+
+      <div id="statusRejected" class="status-card" style="display:none">
+        <h3>❌ Solicitud rechazada</h3>
+        <p>Tu solicitud de acceso no fue aprobada. Si crees que es un error, contacta al administrador del Junté.</p>
+      </div>
+
+      <div id="statusSuspended" class="status-card" style="display:none">
+        <h3>🚫 Cuenta suspendida</h3>
+        <p>Tu acceso fue suspendido. Contacta al administrador del Junté si tienes preguntas.</p>
+      </div>
+
+      <div id="statusApproved" class="status-card" style="display:none">
+        <h3>✅ Cuenta aprobada</h3>
+        <p>Hola <strong id="approvedNombre"></strong> — ya puedes ver y compartir fotos de tu familia en el
+           <a href="/#mural">Mural</a> y en <a href="/live">Junté en Vivo</a>.</p>
+      </div>
+
+      <button class="btn-cancel" id="btnLogout" style="margin-top:16px">Cerrar sesión</button>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junté Familiar 2026</p>
+  </div>
+</footer>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="static/js/firebase-init.js"></script>
+<script src="static/js/auth.js"></script>
+<script src="static/js/families-roster.js"></script>
+<script src="static/js/cuenta.js"></script>
+</body>
+</html>
