@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // corren (antes, un solo error aquí dejaba la página entera en blanco).
   const steps = [
     ["nav",              initNav],
+    ["pestañas por día", initDayTabs],
     ["modal de subida",  initUploadModal],
     ["modal de foto",    initPhotoModal],
     ["textos editables", loadEditableTexts],
@@ -92,6 +93,24 @@ function initNav() {
   const toggle = document.getElementById("navToggle");
   const links  = document.getElementById("navLinks");
   if (toggle) toggle.addEventListener("click", () => links.classList.toggle("open"));
+}
+
+/* ══════════════════ PESTAÑAS POR DÍA (Itinerario / Menú) ══════════════════
+   Solo click — nada de IntersectionObserver. Un mismo helper sirve para
+   ambas secciones: el grupo se identifica con data-tabgroup. */
+function initDayTabs() {
+  document.querySelectorAll(".day-tabs[data-tabgroup]").forEach(tabBar => {
+    const group = tabBar.dataset.tabgroup;
+    tabBar.querySelectorAll(".day-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabBar.querySelectorAll(".day-tab").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll(`[data-tabgroup="${group}"][data-panel]`).forEach(p => p.classList.remove("active"));
+        const panel = document.querySelector(`[data-tabgroup="${group}"][data-panel="${btn.dataset.day}"]`);
+        if (panel) panel.classList.add("active");
+      });
+    });
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════════════

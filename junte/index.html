@@ -158,50 +158,49 @@
   </div>
 </div>
 
-<!-- ═══ ITINERARIO (estático, sin JS) ════════════════════════════════════ -->
+<!-- ═══ ITINERARIO (estático, sin JS de render — solo pestañas por click) ═ -->
 <section id="itinerario" class="section itinerario-section">
   <div class="section-header">
     <h2 class="section-title">Itinerario</h2>
     <p class="section-sub">Tres días llenos de familia, diversión y recuerdos</p>
   </div>
-  <div class="info-stack">
+  <div class="day-tabs" data-tabgroup="itin">
+    <button class="day-tab active" data-day="viernes">Viernes</button>
+    <button class="day-tab" data-day="sabado">Sabado</button>
+    <button class="day-tab" data-day="domingo">Domingo</button>
+  </div>
 
-    <div class="info-card">
-      <h3>Viernes</h3>
-      <ul class="info-list">
-        <li><span class="info-hora">6:30</span> Salida para Jarabacoa</li>
-        <li><span class="info-hora">10:00</span> Llegada al Rancho Guazaras</li>
-        <li><span class="info-hora">10:30</span> Actividades</li>
-        <li><span class="info-hora">12:30</span> Almuerzo</li>
-        <li><span class="info-hora">1:00</span> Inflables</li>
-        <li><span class="info-hora">5:00</span> Musica DJ</li>
-        <li><span class="info-hora">8:00</span> Kareoke / Fogata</li>
-      </ul>
+  <div class="day-panel active" data-tabgroup="itin" data-panel="viernes">
+    <div class="timeline">
+      <div class="timeline-item" data-icon="🚌"><div class="timeline-time">🕐 6:30</div><div class="timeline-act">Salida para Jarabacoa</div></div>
+      <div class="timeline-item" data-icon="🏡"><div class="timeline-time">🕐 10:00</div><div class="timeline-act">Llegada al Rancho Guazaras</div></div>
+      <div class="timeline-item" data-icon="🎉"><div class="timeline-time">🕐 10:30</div><div class="timeline-act">Actividades</div></div>
+      <div class="timeline-item" data-icon="🍽️"><div class="timeline-time">🕐 12:30</div><div class="timeline-act">Almuerzo</div></div>
+      <div class="timeline-item" data-icon="🏟️"><div class="timeline-time">🕐 1:00</div><div class="timeline-act">Inflables</div></div>
+      <div class="timeline-item" data-icon="🎶"><div class="timeline-time">🕐 5:00</div><div class="timeline-act">Musica DJ</div></div>
+      <div class="timeline-item" data-icon="🔥"><div class="timeline-time">🕐 8:00</div><div class="timeline-act">Kareoke / Fogata</div></div>
     </div>
+  </div>
 
-    <div class="info-card">
-      <h3>Sabado</h3>
-      <ul class="info-list">
-        <li><span class="info-hora">8:00</span> Desayuno</li>
-        <li><span class="info-hora">9:30</span> Actividades Deportivas.</li>
-        <li><span class="info-hora">12:00</span> Almuerzo</li>
-        <li><span class="info-hora">2:30</span> Pool pathy ( Fiesta de Espuma</li>
-        <li><span class="info-hora">3:00</span> Musica DJ</li>
-        <li><span class="info-hora">6:30</span> Cine</li>
-        <li><span class="info-hora">9:00</span> Kareoke</li>
-      </ul>
+  <div class="day-panel" data-tabgroup="itin" data-panel="sabado">
+    <div class="timeline">
+      <div class="timeline-item" data-icon="☕"><div class="timeline-time">🕐 8:00</div><div class="timeline-act">Desayuno</div></div>
+      <div class="timeline-item" data-icon="⚽"><div class="timeline-time">🕐 9:30</div><div class="timeline-act">Actividades Deportivas.</div></div>
+      <div class="timeline-item" data-icon="🍽️"><div class="timeline-time">🕐 12:00</div><div class="timeline-act">Almuerzo</div></div>
+      <div class="timeline-item" data-icon="🏊"><div class="timeline-time">🕐 2:30</div><div class="timeline-act">Pool pathy ( Fiesta de Espuma</div></div>
+      <div class="timeline-item" data-icon="🎶"><div class="timeline-time">🕐 3:00</div><div class="timeline-act">Musica DJ</div></div>
+      <div class="timeline-item" data-icon="🎬"><div class="timeline-time">🕐 6:30</div><div class="timeline-act">Cine</div></div>
+      <div class="timeline-item" data-icon="🎤"><div class="timeline-time">🕐 9:00</div><div class="timeline-act">Kareoke</div></div>
     </div>
+  </div>
 
-    <div class="info-card">
-      <h3>Domingo</h3>
-      <ul class="info-list">
-        <li><span class="info-hora">6:30</span> Senderismo</li>
-        <li><span class="info-hora">9:00</span> Desayuno</li>
-        <li><span class="info-hora">11:30</span> Almuerzo</li>
-        <li><span class="info-hora">3:00</span> Salida del Rancho</li>
-      </ul>
+  <div class="day-panel" data-tabgroup="itin" data-panel="domingo">
+    <div class="timeline">
+      <div class="timeline-item" data-icon="🥾"><div class="timeline-time">🕐 6:30</div><div class="timeline-act">Senderismo</div></div>
+      <div class="timeline-item" data-icon="☕"><div class="timeline-time">🕐 9:00</div><div class="timeline-act">Desayuno</div></div>
+      <div class="timeline-item" data-icon="🍽️"><div class="timeline-time">🕐 11:30</div><div class="timeline-act">Almuerzo</div></div>
+      <div class="timeline-item" data-icon="👋"><div class="timeline-time">🕐 3:00</div><div class="timeline-act">Salida del Rancho</div></div>
     </div>
-
   </div>
 </section>
 
@@ -211,59 +210,64 @@
     <h2 class="section-title">Nuestras Villas</h2>
     <p class="section-sub">Rancho Las Guazaras · Tu hogar por el fin de semana</p>
   </div>
-  <div class="info-stack">
+  <div class="villas-grid">
 
-    <div class="info-card">
-      <h3>Villa Palmera</h3>
-      <ul class="info-list plain">
-        <li>Miguel De la Cruz</li>
-        <li>Margarita Felix</li>
-        <li>Selia Peralta</li>
-        <li>Jhon Daniel</li>
-        <li>Adolfo Perez</li>
+    <div class="villa-card">
+      <div class="villa-icon">🌴</div>
+      <div class="villa-name">Villa Palmera</div>
+      <ul class="villa-familia-list">
+        <li class="villa-familia-item"><span class="familia-nombre">Miguel De la Cruz</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Margarita Felix</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Selia Peralta</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Jhon Daniel</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Adolfo Perez</span></li>
       </ul>
     </div>
 
-    <div class="info-card">
-      <h3>Villa Perez</h3>
-      <ul class="info-list plain">
-        <li>Mariel Perez</li>
-        <li>Orlando Tejeda</li>
-        <li>Haronid Rodriguez</li>
-        <li>Joel Abad</li>
-        <li>Johelmi Abad</li>
+    <div class="villa-card">
+      <div class="villa-icon">🌿</div>
+      <div class="villa-name">Villa Perez</div>
+      <ul class="villa-familia-list">
+        <li class="villa-familia-item"><span class="familia-nombre">Mariel Perez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Orlando Tejeda</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Haronid Rodriguez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Joel Abad</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Johelmi Abad</span></li>
       </ul>
     </div>
 
-    <div class="info-card">
-      <h3>Villa Café</h3>
-      <ul class="info-list plain">
-        <li>Bernardo Rodriguez</li>
-        <li>Joel Hereaux</li>
-        <li>Gabriel Perez</li>
-        <li>Manuel Serulle</li>
-        <li>Martha de la Rosa</li>
+    <div class="villa-card">
+      <div class="villa-icon">☕</div>
+      <div class="villa-name">Villa Café</div>
+      <ul class="villa-familia-list">
+        <li class="villa-familia-item"><span class="familia-nombre">Bernardo Rodriguez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Joel Hereaux</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Gabriel Perez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Manuel Serulle</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Martha de la Rosa</span></li>
       </ul>
     </div>
 
-    <div class="info-card">
-      <h3>Villa Cereza</h3>
-      <ul class="info-list plain">
-        <li>Pedro Pangola</li>
-        <li>Francisco Silverio</li>
-        <li>Maribel Rosario</li>
-        <li>Reynaldo Perez</li>
+    <div class="villa-card">
+      <div class="villa-icon">🍒</div>
+      <div class="villa-name">Villa Cereza</div>
+      <ul class="villa-familia-list">
+        <li class="villa-familia-item"><span class="familia-nombre">Pedro Pangola</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Francisco Silverio</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Maribel Rosario</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Reynaldo Perez</span></li>
       </ul>
     </div>
 
-    <div class="info-card">
-      <h3>Villa Bosque</h3>
-      <ul class="info-list plain">
-        <li>Rodolfo Marte</li>
-        <li>Vladimir Mendez</li>
-        <li>Julio Sanchez</li>
-        <li>Elias Gomez</li>
-        <li>Maria Garcia</li>
+    <div class="villa-card">
+      <div class="villa-icon">🌲</div>
+      <div class="villa-name">Villa Bosque</div>
+      <ul class="villa-familia-list">
+        <li class="villa-familia-item"><span class="familia-nombre">Rodolfo Marte</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Vladimir Mendez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Julio Sanchez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Elias Gomez</span></li>
+        <li class="villa-familia-item"><span class="familia-nombre">Maria Garcia</span></li>
       </ul>
     </div>
 
@@ -309,74 +313,128 @@
   </div>
 </section>
 
-<!-- ═══ MENÚ (estático, sin JS) ═══════════════════════════════════════════ -->
+<!-- ═══ MENÚ (estático, sin JS de render — solo pestañas por click) ═══════ -->
 <section id="menu" class="section menu-section">
   <div class="section-header">
     <h2 class="section-title">Menú del Junte</h2>
     <p class="section-sub">Sabor dominicano para toda la familia</p>
   </div>
-  <div class="info-stack">
+  <div class="day-tabs" data-tabgroup="menu">
+    <button class="day-tab active" data-day="viernes">Viernes</button>
+    <button class="day-tab" data-day="sabado">Sabado</button>
+    <button class="day-tab" data-day="domingo">Domingo</button>
+  </div>
 
-    <div class="info-card">
-      <h3>Viernes</h3>
-      <p class="menu-meal-label">Almuerzo</p>
-      <ul class="info-list plain">
-        <li>Arroz Blanco</li>
-        <li>Arroz de Moro</li>
-        <li>Pollo</li>
-        <li>Cerdo Asado</li>
-        <li>Ensalada Verde</li>
-        <li>Papas Fritas</li>
-        <li>Ensalada Rusa</li>
-      </ul>
-      <p class="menu-meal-label">Cena</p>
-      <ul class="info-list plain">
-        <li>Parillada</li>
-        <li>Hot Dog.</li>
-      </ul>
+  <div class="menu-panel active" data-tabgroup="menu" data-panel="viernes">
+    <div class="menu-cols">
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&q=80" alt="Desayuno" loading="lazy" />
+          <div class="menu-card-badge" style="background:#F57F17">☀️ Desayuno</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list"><li class="dish-empty">—</li></ul></div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80" alt="Almuerzo" loading="lazy" />
+          <div class="menu-card-badge" style="background:#2E7D32">🌤️ Almuerzo</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>Arroz Blanco</li>
+          <li class="dish-item"><span class="dish-dot"></span>Arroz de Moro</li>
+          <li class="dish-item"><span class="dish-dot"></span>Pollo</li>
+          <li class="dish-item"><span class="dish-dot"></span>Cerdo Asado</li>
+          <li class="dish-item"><span class="dish-dot"></span>Ensalada Verde</li>
+          <li class="dish-item"><span class="dish-dot"></span>Papas Fritas</li>
+          <li class="dish-item"><span class="dish-dot"></span>Ensalada Rusa</li>
+        </ul></div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80" alt="Cena" loading="lazy" />
+          <div class="menu-card-badge" style="background:#1A237E">🌙 Cena</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>Parillada</li>
+          <li class="dish-item"><span class="dish-dot"></span>Hot Dog.</li>
+        </ul></div>
+      </div>
     </div>
+  </div>
 
-    <div class="info-card">
-      <h3>Sabado</h3>
-      <p class="menu-meal-label">Desayuno</p>
-      <ul class="info-list plain">
-        <li>3 Golpes</li>
-        <li>Pan con chocolate</li>
-      </ul>
-      <p class="menu-meal-label">Almuerzo</p>
-      <ul class="info-list plain">
-        <li>Arroz Blanco</li>
-        <li>Arroz Moro</li>
-        <li>Yuca</li>
-        <li>Chivo</li>
-        <li>Pollo Frito</li>
-        <li>Ensalada verde / Rusa</li>
-      </ul>
-      <p class="menu-meal-label">Cena</p>
-      <ul class="info-list plain">
-        <li>Parillada</li>
-        <li>Hot Dog.</li>
-        <li>Mondongo</li>
-      </ul>
+  <div class="menu-panel" data-tabgroup="menu" data-panel="sabado">
+    <div class="menu-cols">
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&q=80" alt="Desayuno" loading="lazy" />
+          <div class="menu-card-badge" style="background:#F57F17">☀️ Desayuno</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>3 Golpes</li>
+          <li class="dish-item"><span class="dish-dot"></span>Pan con chocolate</li>
+        </ul></div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80" alt="Almuerzo" loading="lazy" />
+          <div class="menu-card-badge" style="background:#2E7D32">🌤️ Almuerzo</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>Arroz Blanco</li>
+          <li class="dish-item"><span class="dish-dot"></span>Arroz Moro</li>
+          <li class="dish-item"><span class="dish-dot"></span>Yuca</li>
+          <li class="dish-item"><span class="dish-dot"></span>Chivo</li>
+          <li class="dish-item"><span class="dish-dot"></span>Pollo Frito</li>
+          <li class="dish-item"><span class="dish-dot"></span>Ensalada verde / Rusa</li>
+        </ul></div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80" alt="Cena" loading="lazy" />
+          <div class="menu-card-badge" style="background:#1A237E">🌙 Cena</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>Parillada</li>
+          <li class="dish-item"><span class="dish-dot"></span>Hot Dog.</li>
+          <li class="dish-item"><span class="dish-dot"></span>Mondongo</li>
+        </ul></div>
+      </div>
     </div>
+  </div>
 
-    <div class="info-card">
-      <h3>Domingo</h3>
-      <p class="menu-meal-label">Desayuno</p>
-      <ul class="info-list plain">
-        <li>3 Golpes</li>
-        <li>Pan con chocolate</li>
-      </ul>
-      <p class="menu-meal-label">Almuerzo</p>
-      <ul class="info-list plain">
-        <li>Arroz Blanco</li>
-        <li>Pollo Frito</li>
-        <li>Ensalada Verde</li>
-        <li>Papas Fritas</li>
-        <li>Sancocho</li>
-      </ul>
+  <div class="menu-panel" data-tabgroup="menu" data-panel="domingo">
+    <div class="menu-cols">
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&q=80" alt="Desayuno" loading="lazy" />
+          <div class="menu-card-badge" style="background:#F57F17">☀️ Desayuno</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>3 Golpes</li>
+          <li class="dish-item"><span class="dish-dot"></span>Pan con chocolate</li>
+        </ul></div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80" alt="Almuerzo" loading="lazy" />
+          <div class="menu-card-badge" style="background:#2E7D32">🌤️ Almuerzo</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list">
+          <li class="dish-item"><span class="dish-dot"></span>Arroz Blanco</li>
+          <li class="dish-item"><span class="dish-dot"></span>Pollo Frito</li>
+          <li class="dish-item"><span class="dish-dot"></span>Ensalada Verde</li>
+          <li class="dish-item"><span class="dish-dot"></span>Papas Fritas</li>
+          <li class="dish-item"><span class="dish-dot"></span>Sancocho</li>
+        </ul></div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-img-wrap">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80" alt="Cena" loading="lazy" />
+          <div class="menu-card-badge" style="background:#1A237E">🌙 Cena</div>
+        </div>
+        <div class="menu-card-body"><ul class="menu-dish-list"><li class="dish-empty">—</li></ul></div>
+      </div>
     </div>
-
   </div>
 </section>
 
