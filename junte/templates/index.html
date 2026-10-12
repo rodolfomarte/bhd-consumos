@@ -174,13 +174,9 @@
   <div class="day-panel" id="panel-domingo"><div class="timeline" id="timeline-domingo"></div></div>
   <div class="actividades-extra">
     <h3 class="editable" data-key="act-titulo">Actividades disponibles</h3>
-    <div class="act-grid">
-      <div class="act-item">🏟️ Inflables</div>
-      <div class="act-item">⚽ Cancha de Fútbol</div>
-      <div class="act-item">🎤 Karaoke</div>
-      <div class="act-item">🎬 Cine al Aire Libre</div>
-      <div class="act-item">🏊 Pool Party</div>
-      <div class="act-item">🥾 Senderismo</div>
+    <div class="act-grid" id="actGrid"></div>
+    <div class="admin-only" style="display:none" id="btnAddActividad">
+      <button class="btn-admin-add" onclick="addActividad()">+ Agregar actividad</button>
     </div>
   </div>
 </section>

@@ -817,3 +817,4 @@ body.admin-mode .live-filter-section { top: 98px; }
 .admin-tab.active .admin-tab-count { background: rgba(255,255,255,.25); }
 .admin-tab-panel { display: none; }
 .admin-tab-panel.active { display: block; }
+.act-item.admin-editable { display: inline-flex; align-items: center; gap: 6px; padding-right: 8px; }

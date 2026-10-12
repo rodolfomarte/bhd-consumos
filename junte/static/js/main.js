@@ -57,6 +57,18 @@ const DEFAULT_DATA = {
     almuerzo: "https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80",
     cena:     "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
   },
+
+  // "Actividades disponibles" — lista exacta de cargar en codex.xlsx
+  actividadesDisponibles: [
+    { icon:"🏟️", label:"Inflable" },
+    { icon:"⚽",  label:"Cancha de Football" },
+    { icon:"🎶", label:"Música en Vivo" },
+    { icon:"🎤", label:"Karaoke" },
+    { icon:"🎬", label:"Cine" },
+    { icon:"🔥", label:"Fogata" },
+    { icon:"🥾", label:"Senderismo" },
+    { icon:"🫧", label:"Fiesta de Burbujas" },
+  ],
 };
 
 /* ══════════════════ ESTADO GLOBAL ════════════════════════════════════════ */
@@ -93,10 +105,12 @@ function onAuthState(state) {
   document.body.classList.toggle("admin-mode", adminMode);
   document.getElementById("adminBadge").style.display = adminMode ? "flex" : "none";
   document.querySelectorAll(".editable").forEach(el => el.contentEditable = adminMode ? "true" : "false");
+  document.querySelectorAll(".admin-only").forEach(el => el.style.display = adminMode ? "block" : "none");
 
   renderVillas();
   renderMenus();
   renderTimelines();
+  renderActividades();
 
   watchSettings();
   watchMural();
@@ -114,6 +128,8 @@ function watchContent() {
     async snap => {
       if (snap.exists) {
         appData = snap.data();
+        // Docs sembrados antes de que existiera este campo no lo tienen.
+        if (!appData.actividadesDisponibles) appData.actividadesDisponibles = DEFAULT_DATA.actividadesDisponibles;
       } else if (authState.isAdmin) {
         appData = seedFromRoster();
         await seedPublicContent();
@@ -124,6 +140,7 @@ function watchContent() {
       renderVillas();
       renderMenus();
       renderTimelines();
+      renderActividades();
       renderMuralGrid();
       forceReveal(); // el contenido llega async, después de que initReveal() ya observó el DOM inicial
     },
@@ -346,6 +363,36 @@ function initMenuTabs() {
       document.getElementById("menu-"+btn.dataset.menu).classList.add("active");
     });
   });
+}
+
+/* ══════════════════ ACTIVIDADES DISPONIBLES ═══════════════════════════════ */
+function renderActividades() {
+  const grid = document.getElementById("actGrid");
+  if (!grid) return;
+  const list = appData.actividadesDisponibles || [];
+  grid.innerHTML = list.map((a,i) => adminMode
+    ? `<div class="act-item admin-editable">
+         <span>${a.icon} ${escHtml(a.label)}</span>
+         <button class="btn-del-dish" onclick="removeActividad(${i})" title="Eliminar">🗑️</button>
+       </div>`
+    : `<div class="act-item">${a.icon} ${escHtml(a.label)}</div>`
+  ).join("");
+  document.getElementById("btnAddActividad").style.display = adminMode ? "block" : "none";
+}
+
+function addActividad() {
+  const label = prompt("Nombre de la actividad:");
+  if (!label) return;
+  const icon = prompt("Emoji (ej: 🎉):", "✨") || "✨";
+  if (!appData.actividadesDisponibles) appData.actividadesDisponibles = [];
+  appData.actividadesDisponibles.push({ icon: icon.trim(), label: label.trim() });
+  saveData(); renderActividades(); forceReveal();
+}
+
+function removeActividad(i) {
+  if (!confirm(`¿Eliminar "${appData.actividadesDisponibles[i].label}"?`)) return;
+  appData.actividadesDisponibles.splice(i, 1);
+  saveData(); renderActividades(); forceReveal();
 }
 
 /* ══════════════════ NAV ═════════════════════════════════════════════════ */
@@ -766,3 +813,5 @@ window.setFilter        = setFilter;
 window.removeFamilia    = removeFamilia;
 window.addAgendaItem    = addAgendaItem;
 window.removeAgendaItem = removeAgendaItem;
+window.addActividad     = addActividad;
+window.removeActividad  = removeActividad;
