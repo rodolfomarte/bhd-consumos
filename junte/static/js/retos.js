@@ -21,12 +21,22 @@ let villaImagenesCache  = {};  // slug -> datos de villaImagenes/<slug>
 let evidenciaUnsub      = null;
 let currentDetailVilla  = null;
 let selectedEvidFile    = null;
+let villaPuntosCache    = {}; // slug -> total
+
+const VILLA_INFO = {
+  palmera: { name: "Villa Palmera", icon: "🌴" },
+  perez:   { name: "Villa Pérez",   icon: "🌿" },
+  cafe:    { name: "Villa Café",    icon: "☕" },
+  cereza:  { name: "Villa Cereza",  icon: "🍒" },
+  bosque:  { name: "Villa Bosque",  icon: "🌲" },
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   const steps = [
     ["cuenta regresiva",     initRetosCountdown],
     ["retos publicados",     watchRetos],
     ["fotos de villas",      watchVillaImagenes],
+    ["tabla de posiciones",  watchVillaPuntos],
     ["modal de detalle",     initDetailModal],
     ["zoom de fotos",        initPhotoZoom],
   ];
@@ -157,6 +167,54 @@ function applyVillaImagen(slug) {
     photo.style.display = "none";
     icon.style.display = "";
   }
+}
+
+/* ══════════════════ TABLA DE POSICIONES ══════════════════════════════════
+   villaPuntos/<slug> — solo existe/tiene puntos cuando el admin aprobó al
+   menos un reto de esa villa. Mientras nadie tenga puntos, se queda el
+   aviso de siempre ("aparecerá cuando comiencen los retos"); nunca un
+   hueco en blanco si falla la lectura (visitante sin cuenta, por ejemplo). */
+function watchVillaPuntos() {
+  if (typeof fbDb === "undefined") return;
+  VILLA_SLUGS.forEach(slug => {
+    fbDb.collection("villaPuntos").doc(slug).onSnapshot(
+      snap => {
+        villaPuntosCache[slug] = snap.exists ? (snap.data().total || 0) : 0;
+        try { renderLeaderboard(); } catch (err) { console.error("Error en tabla de posiciones:", err); }
+      },
+      err => console.error(`Error leyendo puntos de ${slug}:`, err) // se queda el aviso de siempre
+    );
+  });
+}
+
+function renderLeaderboard() {
+  const wrap  = document.getElementById("retosLeaderboard");
+  const empty = document.getElementById("retosLeaderboardEmpty");
+  const list  = document.getElementById("retosLeaderboardList");
+  if (!wrap || !empty || !list) return;
+
+  const ranked = VILLA_SLUGS
+    .map(slug => ({ slug, puntos: villaPuntosCache[slug] || 0, ...VILLA_INFO[slug] }))
+    .filter(v => v.puntos > 0)
+    .sort((a, b) => b.puntos - a.puntos);
+
+  if (!ranked.length) {
+    wrap.classList.remove("has-data");
+    empty.style.display = "block";
+    list.style.display = "none";
+    return;
+  }
+
+  wrap.classList.add("has-data");
+  empty.style.display = "none";
+  list.style.display = "flex";
+  list.innerHTML = ranked.map((v, i) => `
+    <div class="retos-leaderboard-row ${i === 0 ? "rank-1" : ""}">
+      <span class="retos-leaderboard-rank">${i + 1}</span>
+      <span class="retos-leaderboard-icon">${v.icon}</span>
+      <span class="retos-leaderboard-name">${v.name}</span>
+      <span class="retos-leaderboard-pts">${v.puntos} pts</span>
+    </div>`).join("");
 }
 
 function renderDetailPhoto() {
