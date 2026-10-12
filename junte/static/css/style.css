@@ -1034,8 +1034,9 @@ body.nav-open-lock { overflow: hidden; }
 /* ─── Retos: foto del equipo en tarjeta y detalle ───────────────────────── */
 .reto-card-media { position: relative; width: 100%; }
 .reto-card-photo {
-  width: 100%; max-height: 150px; object-fit: contain; background: #f4f4f4;
-  border-radius: var(--radius-sm); cursor: zoom-in;
+  display: block; width: 110px; height: 110px; object-fit: cover;
+  border-radius: 50%; border: 3px solid var(--gold);
+  background: #f4f4f4; cursor: zoom-in; margin: 0 auto 4px;
 }
 .reto-detail-photo {
   display: block; width: 100%; max-height: 240px; object-fit: contain;
