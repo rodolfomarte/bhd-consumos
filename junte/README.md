@@ -69,11 +69,14 @@ Variables de entorno en **Netlify → Site settings → Environment variables**:
 
 | Variable | Para qué | Dónde se obtiene |
 |---|---|---|
-| `FIREBASE_PROJECT_ID` | Admin SDK (Netlify Functions) | Firebase Console → Project settings |
-| `FIREBASE_CLIENT_EMAIL` | Admin SDK | Firebase Console → Project settings → Service accounts → **Generate new private key** (descarga un JSON) |
-| `FIREBASE_PRIVATE_KEY` | Admin SDK | Mismo JSON de arriba — pega el valor de `private_key` (puedes dejar los `\n` literales, el código los normaliza) |
+| `FIREBASE_SERVICE_ACCOUNT_BASE64` | Admin SDK (Netlify Functions) — **recomendado** | El JSON completo de la service account (Firebase Console → Project settings → Service accounts → Generate new private key), codificado en base64 como **un solo valor de una línea**. Inmune al error clásico "Invalid PEM formatted message" que da pegar una clave multilínea en un campo de texto. |
 | `APP_STORAGE_LIMIT_BYTES` | Límite interno de la app para el contador de almacenamiento | Opcional — por defecto son 10 GiB (`10737418240`). No tiene relación con lo que Firebase te cobre. |
 | `FIREBASE_STORAGE_BUCKET` | Bucket de Storage que lee el contador | Opcional — ya trae por defecto `junte-familiar.firebasestorage.app` |
+
+Alternativa (más frágil, solo si no puedes usar la de arriba):
+`FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` (el
+valor crudo de `private_key` del JSON, con sus `\n` — este es justo el
+formato que se corrompe fácil al copiar/pegar).
 
 **Sin `FIREBASE_*`**: el sitio sigue funcionando para registro/login, pero
 **aprobar y rechazar** devuelven "faltan credenciales del servidor" (pasan
