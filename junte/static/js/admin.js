@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTabs();
   initRetosTabs();
   initPublishForm();
+  initEvidenciaFilters();
 
   JunteAuth.subscribe(state => {
     document.getElementById("adminLoading").style.display = state.loading ? "block" : "none";
@@ -251,8 +252,8 @@ const VILLAS = [
 const CHALLENGE_TEMPLATE = {
   retoId: "identidad-equipo",
   titulo: "Crea la identidad de tu equipo",
-  objetivo: "Cada villa debe elegir un nombre para su equipo y crear un eslogan que represente su alegría, unión y espíritu familiar. La entrega es una foto o un video corto del equipo presentándolo.",
-  entregables: ["nombre_equipo", "eslogan", "evidencia"],
+  objetivo: "Cada villa debe elegir un nombre para su equipo y crear un eslogan que represente su alegría, unión y espíritu familiar. La entrega es una foto del equipo mostrando su eslogan de forma legible.",
+  entregables: ["nombre_equipo", "eslogan", "foto"],
 };
 
 function villaSlugForFamilia(familiaSlug) {
@@ -410,69 +411,100 @@ function renderRetosStatusList() {
 
 /* ── Evidencias ──────────────────────────────────────────────────────── */
 const EVID_ESTADOS = {
-  pendiente: "⏳ Pendiente",
-  aprobada: "✅ Aprobada",
-  requiere_correccion: "✏️ Requiere corrección",
-  rechazada: "❌ Rechazada",
+  pendiente: "⏳ Pendiente de validación",
+  correccion: "✏️ Corrección solicitada",
+  aprobado: "✅ Aprobado",
 };
+let evidenciasAll = [];
+
+function initEvidenciaFilters() {
+  const villaSel  = document.getElementById("evidFiltroVilla");
+  const estadoSel = document.getElementById("evidFiltroEstado");
+  if (!villaSel || !estadoSel) return;
+  [villaSel, estadoSel].forEach(sel => sel.addEventListener("change", () => renderEvidenciasList(evidenciasAll)));
+}
 
 function watchEvidencias() {
   evidenciasUnsub = fbDb.collection("retoEvidencias").orderBy("createdAt", "desc").onSnapshot(
     snap => {
-      const list = [];
-      snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
-      document.getElementById("tabCountEvid").textContent = list.length;
-      try { renderEvidenciasList(list); } catch (err) { console.error("Error en Evidencias:", err); }
+      evidenciasAll = [];
+      snap.forEach(doc => evidenciasAll.push({ id: doc.id, ...doc.data() }));
+      document.getElementById("tabCountEvid").textContent = evidenciasAll.length;
+      try { renderEvidenciasList(evidenciasAll); } catch (err) { console.error("Error en Evidencias:", err); }
     },
     err => console.error("Evidencias error:", err)
   );
 }
 
+function fechaEnvioLabel(ev) {
+  const d = ev.createdAt?.toDate ? ev.createdAt.toDate() : (ev.createdAt ? new Date(ev.createdAt) : null);
+  return d ? d.toLocaleString("es-DO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+}
+
+function historialHtml(ev) {
+  if (!ev.historial || !ev.historial.length) return "";
+  const items = ev.historial.slice().reverse().map(h => {
+    const d = h.en?.toDate ? h.en.toDate() : (h.en ? new Date(h.en) : null);
+    const fecha = d ? d.toLocaleString("es-DO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+    return `<div class="evidencia-historial-item">${fecha} — ${escAdmin(h.accion)}${h.comentario ? `: "${escAdmin(h.comentario)}"` : ""}</div>`;
+  }).join("");
+  return `<details class="evidencia-historial"><summary>Historial (${ev.historial.length})</summary>${items}</details>`;
+}
+
 function renderEvidenciasList(list) {
   const wrap = document.getElementById("evidenciasList");
   if (!wrap) return;
-  if (!list.length) { wrap.innerHTML = `<p class="admin-empty">— Todavía no hay entregas —</p>`; return; }
 
-  wrap.innerHTML = list.map(ev => {
+  const villaFiltro  = document.getElementById("evidFiltroVilla")?.value || "";
+  const estadoFiltro = document.getElementById("evidFiltroEstado")?.value || "";
+  const filtered = list.filter(ev =>
+    (!villaFiltro || ev.villa === villaFiltro) && (!estadoFiltro || ev.estado === estadoFiltro)
+  );
+
+  if (!filtered.length) { wrap.innerHTML = `<p class="admin-empty">— No hay entregas con ese filtro —</p>`; return; }
+
+  wrap.innerHTML = filtered.map(ev => {
     const villa = VILLAS.find(v => v.slug === ev.villa);
     return `
       <div class="admin-user-card evidencia-card">
         <div class="admin-user-info">
           <strong>${villa ? villa.icon + " " + villa.name : ev.villa}</strong>
+          <span>Capitán: ${escAdmin(ev.nombreUsuario || "")}</span>
           <span>Equipo: ${escAdmin(ev.nombreEquipo)} — "${escAdmin(ev.eslogan)}"</span>
-          <span class="admin-user-email">Enviado por ${escAdmin(ev.nombreUsuario || "")}</span>
-          ${ev.archivoUrl ? `<a class="evidencia-file-link" href="${ev.archivoUrl}" target="_blank" rel="noopener">Ver archivo ↗</a>` : ""}
-          ${ev.respuesta ? `<span>${escAdmin(ev.respuesta)}</span>` : ""}
+          <span class="admin-user-email">Enviado: ${fechaEnvioLabel(ev)}${ev.tardia ? '<span class="evidencia-badge-tardia">Tardía</span>' : ""}</span>
+          ${ev.fotoUrl ? `<img src="${ev.fotoUrl}" alt="Foto del equipo" class="evidencia-photo-thumb" onclick="window.open('${ev.fotoUrl}','_blank')" />` : ""}
+          <span class="reto-status-badge ${ev.estado === 'aprobado' ? 'open' : ev.estado === 'correccion' ? 'done' : 'locked'}">${EVID_ESTADOS[ev.estado] || ev.estado}</span>
+          ${ev.comentarioAdmin ? `<p class="reto-admin-comment">💬 ${escAdmin(ev.comentarioAdmin)}</p>` : ""}
+          ${historialHtml(ev)}
         </div>
-        <select class="select-input" id="evidEstado-${ev.id}">
-          ${Object.entries(EVID_ESTADOS).map(([val, label]) =>
-            `<option value="${val}" ${ev.estado === val ? "selected" : ""}>${label}</option>`).join("")}
-        </select>
-        <textarea class="textarea-input" id="evidComentario-${ev.id}" rows="2" placeholder="Comentario para la villa (opcional)">${escAdmin(ev.comentarioAdmin || "")}</textarea>
-        <button class="btn-admin-sm" data-action="review-evid" data-id="${ev.id}">Guardar</button>
+        <textarea class="textarea-input" id="evidComentario-${ev.id}" rows="2" placeholder="Comentario (obligatorio para corregir o revocar)"></textarea>
+        <div class="evidencia-actions">
+          <button class="btn-admin-sm" data-action="aprobar" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado === 'aprobado' ? "disabled" : ""}>✅ Aprobar</button>
+          <button class="btn-admin-sm" data-action="corregir" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado !== 'pendiente' ? "disabled" : ""}>✏️ Solicitar corrección</button>
+          <button class="btn-admin-sm danger" data-action="revocar" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado !== 'aprobado' ? "disabled" : ""}>↩️ Revocar aprobación</button>
+        </div>
       </div>`;
   }).join("");
 
-  wrap.querySelectorAll('[data-action="review-evid"]').forEach(btn => {
-    btn.addEventListener("click", () => reviewEvidencia(btn.dataset.id, btn));
+  wrap.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener("click", () => reviewEvidencia(btn.dataset.action, btn));
   });
 }
 
-async function reviewEvidencia(id, btn) {
-  const estado = document.getElementById(`evidEstado-${id}`).value;
-  const comentarioAdmin = document.getElementById(`evidComentario-${id}`).value.trim();
+async function reviewEvidencia(action, btn) {
+  const { villa, reto: retoId, id } = btn.dataset;
+  const comentario = document.getElementById(`evidComentario-${id}`).value.trim();
+  if ((action === "corregir" || action === "revocar") && !comentario) {
+    alert("Escribe un comentario — es obligatorio para esta acción.");
+    return;
+  }
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = "…";
   try {
-    await fbDb.collection("retoEvidencias").doc(id).update({
-      estado,
-      comentarioAdmin: comentarioAdmin || null,
-      reviewedBy: fbAuth.currentUser.uid,
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    btn.textContent = "✅ Guardado";
-    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+    await JunteAuth.callFunction("review-evidencia", { method: "POST", body: { villa, retoId, action, comentario } });
+    btn.textContent = "✅ Listo";
+    setTimeout(() => { btn.textContent = original; }, 1500);
   } catch (err) {
     alert("Error: " + err.message);
     btn.textContent = original;

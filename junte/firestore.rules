@@ -153,9 +153,15 @@ service cloud.firestore {
     /* ───────────── retoEvidencias/{villa_retoId} ─────────────
        One evidence doc per villa per challenge (doc id "<villa>_<retoId>",
        enforced below so a captain can't spoof another villa's slot).
-       Only the admin or that villa's captain may create/replace it; every
-       approved member can read it (but not edit it) once it exists — the
-       admin reviews and changes "estado" from the panel. */
+       Estados: 'pendiente' | 'correccion' | 'aprobado' (sin doc = sin
+       entregar). The captain may only create/replace while there's no doc
+       yet or while the admin asked for a correction — never while
+       'pendiente' or 'aprobado'. Approving/requesting-correction/revoking
+       is NOT done through these rules at all: netlify/functions/
+       review-evidencia.js (Admin SDK, a transaction) is the only path that
+       changes "estado" from the admin side, assigns points once, and
+       swaps/restores the villa's approved photo — so a client can never
+       self-approve or double-award points by racing a direct write. */
     match /retoEvidencias/{evidenciaId} {
       allow read: if isAdmin() || isApproved();
 
@@ -163,21 +169,49 @@ service cloud.firestore {
         || (isCaptainOfVilla(request.resource.data.villa)
             && request.resource.data.uid == request.auth.uid
             && request.resource.data.estado == 'pendiente'
+            && request.resource.data.fotoUrl is string && request.resource.data.fotoUrl.size() > 0
+            && request.resource.data.nombreEquipo is string && request.resource.data.nombreEquipo.size() > 0
+            && request.resource.data.eslogan is string && request.resource.data.eslogan.size() > 0
+            && request.resource.data.puntosOtorgados == 0
             && evidenciaId == request.resource.data.villa + '_' + request.resource.data.retoId);
 
-      // The captain may replace their own pending/needs-correction entry
-      // (re-upload, edit team name/slogan) but it always lands back in
-      // "pendiente" — only the admin can set aprobada/rechazada, and the
-      // villa/reto/uid on the doc can never change after creation.
+      // Resubmission always lands back in "pendiente" — never self-approve
+      // — and can never touch villa/retoId/uid/puntosOtorgados/comentario
+      // del admin/imagen anterior (esos solo los toca la función del admin).
       allow update: if isAdmin()
         || (isCaptainOfVilla(resource.data.villa)
+            && resource.data.estado == 'correccion'
             && request.resource.data.villa == resource.data.villa
             && request.resource.data.retoId == resource.data.retoId
             && request.resource.data.uid == resource.data.uid
             && request.resource.data.estado == 'pendiente'
-            && resource.data.estado in ['pendiente', 'requiere_correccion']);
+            && request.resource.data.fotoUrl is string && request.resource.data.fotoUrl.size() > 0
+            && request.resource.data.nombreEquipo is string && request.resource.data.nombreEquipo.size() > 0
+            && request.resource.data.eslogan is string && request.resource.data.eslogan.size() > 0
+            && request.resource.data.puntosOtorgados == resource.data.puntosOtorgados
+            && request.resource.data.comentarioAdmin == resource.data.comentarioAdmin
+            && request.resource.data.imagenAnteriorUrl == resource.data.imagenAnteriorUrl
+            && request.resource.data.imagenAnteriorPath == resource.data.imagenAnteriorPath);
 
       allow delete: if isAdmin();
+    }
+
+    /* ───────────── villaImagenes/{villaSlug} ─────────────
+       The villa's current representative photo (set only by
+       review-evidencia.js when an entry is approved/revoked). Same
+       visibility as the rest of the retos content: admin + approved. */
+    match /villaImagenes/{villaSlug} {
+      allow read: if isAdmin() || isApproved();
+      allow write: if isAdmin();
+    }
+
+    /* ───────────── villaPuntos/{villaSlug} ─────────────
+       Running point total per villa, incremented/decremented only by
+       review-evidencia.js inside a transaction (so an approve/revoke race
+       or a double click can never double-count). */
+    match /villaPuntos/{villaSlug} {
+      allow read: if isAdmin() || isApproved();
+      allow write: if isAdmin();
     }
   }
 }

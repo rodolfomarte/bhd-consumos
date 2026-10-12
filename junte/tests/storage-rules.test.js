@@ -119,7 +119,16 @@ test("retos: un aprobado que NO es capitán de ninguna villa no puede subir evid
 
 test("retos: admin puede subir evidencia a cualquier villa", async () => {
   const admin = testEnv.authenticatedContext("admin1", { email: "admin@junte.internal", admin: true });
-  await assertSucceeds(admin.storage().ref("retos/bosque/identidad-equipo/video.png").put(PNG_BYTES, png));
+  await assertSucceeds(admin.storage().ref("retos/bosque/identidad-equipo/foto.png").put(PNG_BYTES, png));
+});
+
+test("retos: un video YA NO se acepta como evidencia — solo una foto", async () => {
+  const alice = testEnv.authenticatedContext("alice", {
+    email: "alice@junte.internal", approved: true, familia: "perez", capitanVilla: "perez",
+  });
+  await assertFails(
+    alice.storage().ref("retos/perez/identidad-equipo/video.mp4").put(PNG_BYTES, { contentType: "video/mp4" })
+  );
 });
 
 test("retos: cualquier aprobado puede LEER la evidencia (pero no escribirla)", async () => {

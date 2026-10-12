@@ -257,6 +257,8 @@ body.admin-mode .hero   { padding-top: 98px; }
 .btn-cancel:hover { border-color: var(--text-mid); }
 .input-inline { width: 100%; padding: 10px 14px; border: 2px solid #ddd; border-radius: var(--radius-sm); font-family: 'Open Sans', sans-serif; font-size: .95rem; outline: none; transition: border-color var(--transition); }
 .input-inline:focus { border-color: var(--green-mid); }
+.input-inline:disabled, .textarea-input:disabled, .select-input:disabled { background: #f0f0f0; color: #999; cursor: not-allowed; }
+button:disabled { opacity: .6; cursor: not-allowed; }
 
 /* Photo View Modal */
 .photo-view-modal .overlay-modal-box { padding: 0; }
@@ -999,3 +1001,38 @@ body.nav-open-lock { overflow: hidden; }
 .evidencia-card .admin-user-info { gap: 2px; }
 .evidencia-card select, .evidencia-card textarea { margin-top: 6px; }
 .evidencia-file-link { font-size: .82rem; color: var(--green-mid); font-weight: 700; }
+.evidencia-photo-thumb {
+  width: 100%; max-width: 220px; max-height: 160px; object-fit: contain;
+  background: #f0f0f0; border-radius: var(--radius-sm); cursor: zoom-in; margin: 4px 0;
+}
+.evidencia-badge-tardia {
+  display: inline-block; background: #FFEBEE; color: #c62828; font-size: .72rem;
+  font-weight: 700; padding: 2px 9px; border-radius: 10px; margin-left: 6px;
+}
+.evidencia-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.evidencia-filters select { min-width: 160px; }
+.evidencia-historial { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #ddd; }
+.evidencia-historial summary { font-size: .78rem; color: var(--text-mid); cursor: pointer; }
+.evidencia-historial-item { font-size: .78rem; color: var(--text-mid); padding: 3px 0; }
+.evidencia-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+/* ─── Retos: foto del equipo en tarjeta y detalle ───────────────────────── */
+.reto-card-media { position: relative; width: 100%; }
+.reto-card-photo {
+  width: 100%; max-height: 150px; object-fit: contain; background: #f4f4f4;
+  border-radius: var(--radius-sm); cursor: zoom-in;
+}
+.reto-detail-photo {
+  display: block; width: 100%; max-height: 240px; object-fit: contain;
+  background: #f4f4f4; border-radius: var(--radius-sm); margin-bottom: 14px; cursor: zoom-in;
+}
+.reto-criteria {
+  font-size: .8rem; color: var(--text-mid); background: #f8f8f8;
+  border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 4px;
+}
+.reto-upload-progress {
+  width: 100%; height: 10px; background: #e8e8e8; border-radius: 6px; overflow: hidden;
+}
+.reto-upload-progress-fill {
+  height: 100%; background: var(--green-mid); border-radius: 6px; transition: width .2s ease;
+}

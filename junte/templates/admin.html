@@ -130,7 +130,7 @@
     <div class="admin-tab-panel" id="retosPanel-publicar">
       <div class="admin-settings-card">
         <h3 style="color:var(--green-dark);margin-bottom:4px">Crea la identidad de tu equipo</h3>
-        <p class="account-hint" style="margin-bottom:14px">Cada villa debe elegir un nombre de equipo y un eslogan que represente su alegría, unión y espíritu familiar, y entregar una foto o video corto presentándolo.</p>
+        <p class="account-hint" style="margin-bottom:14px">Cada villa debe elegir un nombre de equipo y un eslogan que represente su alegría, unión y espíritu familiar, y entregar una foto donde se lea el eslogan.</p>
         <form id="publishRetoForm" class="account-form">
           <label>Villas a publicar</label>
           <div class="reto-villa-checks" id="publishVillaChecks">
@@ -158,6 +158,22 @@
     </div>
 
     <div class="admin-tab-panel" id="retosPanel-evidencias">
+      <div class="evidencia-filters">
+        <select id="evidFiltroVilla" class="select-input">
+          <option value="">Todas las villas</option>
+          <option value="palmera">🌴 Villa Palmera</option>
+          <option value="perez">🌿 Villa Pérez</option>
+          <option value="cafe">☕ Villa Café</option>
+          <option value="cereza">🍒 Villa Cereza</option>
+          <option value="bosque">🌲 Villa Bosque</option>
+        </select>
+        <select id="evidFiltroEstado" class="select-input">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">⏳ Pendiente de validación</option>
+          <option value="correccion">✏️ Corrección solicitada</option>
+          <option value="aprobado">✅ Aprobado</option>
+        </select>
+      </div>
       <div id="evidenciasList" class="admin-user-list"></div>
     </div>
   </div>
