@@ -29,7 +29,6 @@ let photosUnsub = null, settingsUnsub = null, activitiesUnsub = null;
 
 /* ══════════════════ INIT ═════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-  initNav();
   renderFilterBar();
   renderFeed();
   initUploadModal();
@@ -541,13 +540,6 @@ function deleteLivePhoto() {
   const id = currentPhotoId;
   closeLivePhotoModal();
   quickDeletePhoto(id);
-}
-
-/* ══════════════════ NAV ══════════════════════════════════════════════════ */
-function initNav() {
-  const toggle = document.getElementById("navToggle");
-  const links  = document.getElementById("navLinks");
-  if (toggle) toggle.addEventListener("click", () => links.classList.toggle("open"));
 }
 
 /* ══════════════════ GLOBAL EXPORTS ══════════════════════════════════════ */

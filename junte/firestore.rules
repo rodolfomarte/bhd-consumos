@@ -28,6 +28,12 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/config/settings)
         && get(/databases/$(database)/documents/config/settings).data.galleryEnabledForUsers == true;
     }
+    // Mirrored onto the Auth custom claims by netlify/functions/set-captain.js
+    // (same pattern as approved/familia) — never trust a client-asserted
+    // villa, only the signed token.
+    function isCaptainOfVilla(villa) {
+      return isApproved() && ('capitanVilla' in request.auth.token) && request.auth.token.capitanVilla == villa;
+    }
 
     /* ───────────── users/{uid} ─────────────
        Self-registration only creates a "pending" profile. Nobody can set
@@ -131,6 +137,47 @@ service cloud.firestore {
       allow read: if isAdmin()
         || (isApproved() && resource.data.estado is string && resource.data.estado != 'bloqueado');
       allow write: if isAdmin();
+    }
+
+    /* ───────────── retoCaptains/{villaSlug} ─────────────
+       Who captains each villa. Admin-only in every direction — the client
+       never resolves "am I captain" from this doc, it reads the
+       capitanVilla custom claim instead (set server-side alongside this
+       doc by set-captain.js), so this collection is just the admin panel's
+       view of the current assignment, not a permission source itself. */
+    match /retoCaptains/{villaSlug} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    /* ───────────── retoEvidencias/{villa_retoId} ─────────────
+       One evidence doc per villa per challenge (doc id "<villa>_<retoId>",
+       enforced below so a captain can't spoof another villa's slot).
+       Only the admin or that villa's captain may create/replace it; every
+       approved member can read it (but not edit it) once it exists — the
+       admin reviews and changes "estado" from the panel. */
+    match /retoEvidencias/{evidenciaId} {
+      allow read: if isAdmin() || isApproved();
+
+      allow create: if isAdmin()
+        || (isCaptainOfVilla(request.resource.data.villa)
+            && request.resource.data.uid == request.auth.uid
+            && request.resource.data.estado == 'pendiente'
+            && evidenciaId == request.resource.data.villa + '_' + request.resource.data.retoId);
+
+      // The captain may replace their own pending/needs-correction entry
+      // (re-upload, edit team name/slogan) but it always lands back in
+      // "pendiente" — only the admin can set aprobada/rechazada, and the
+      // villa/reto/uid on the doc can never change after creation.
+      allow update: if isAdmin()
+        || (isCaptainOfVilla(resource.data.villa)
+            && request.resource.data.villa == resource.data.villa
+            && request.resource.data.retoId == resource.data.retoId
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.estado == 'pendiente'
+            && resource.data.estado in ['pendiente', 'requiere_correccion']);
+
+      allow delete: if isAdmin();
     }
   }
 }

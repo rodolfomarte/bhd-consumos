@@ -36,6 +36,7 @@
     <li><a href="/retos">🏆 Retos</a></li>
     <li><a href="#historia">Historia</a></li>
     <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+    <li id="navAdminLink" style="display:none"><a href="/admin">🔐 Administrador</a></li>
   </ul>
 </nav>
 
@@ -282,9 +283,18 @@
     <p class="section-sub editable" data-key="mapa-sub">Rancho Las Guazaras · Jarabacoa — Encuentra tu villa</p>
   </div>
   <div class="mapa-layout">
-    <div class="mapa-embed-wrap">
-      <img src="static/img/mapa.png"
-           alt="Mapa Rancho Las Guazaras" class="mapa-img" />
+    <div class="mapa-embed-wrap" id="mapaEmbedWrap">
+      <img src="static/img/mapa.png" id="mapaImg"
+           alt="Mapa Rancho Las Guazaras" class="mapa-img"
+           onerror="document.getElementById('mapaEmbedWrap').style.display='none'; document.getElementById('mapaFallback').style.display='flex';" />
+    </div>
+    <div class="mapa-fallback-card" id="mapaFallback" style="display:none">
+      <p>🗺️ No pudimos cargar el mapa.</p>
+      <p class="mapa-fallback-dir">📍 Rancho Las Guazaras, Jarabacoa, República Dominicana</p>
+      <a href="https://maps.google.com/maps?q=Rancho+Las+Guazaras,+Jarabacoa,+Dominican+Republic"
+         target="_blank" rel="noopener" class="btn-primary" style="text-decoration:none;display:inline-block">
+        Abrir ruta en Google Maps ↗
+      </a>
     </div>
     <div class="mapa-leyenda">
       <h3 class="mapa-leyenda-title">📍 Leyenda</h3>
@@ -308,11 +318,22 @@
       </div>
       <a href="https://maps.google.com/maps?q=Rancho+Las+Guazaras,+Jarabacoa,+Dominican+Republic"
          target="_blank" rel="noopener" class="mapa-open-link">
-        Ver en Google Maps ↗
+        Abrir ruta en Google Maps ↗
       </a>
     </div>
   </div>
 </section>
+
+<!-- ═══ MODAL ZOOM DEL MAPA ══════════════════════════════════════════════ -->
+<div class="overlay-modal" id="mapaZoomModal">
+  <div class="overlay-modal-bg" id="mapaZoomModalBg"></div>
+  <div class="overlay-modal-box mapa-zoom-box">
+    <button class="modal-close-x" id="mapaZoomClose">&times;</button>
+    <div class="mapa-zoom-scroll">
+      <img src="static/img/mapa.png" alt="Mapa Rancho Las Guazaras (ampliado)" class="mapa-zoom-img" />
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MENÚ (estático, sin JS de render — solo pestañas por click) ═══════ -->
 <section id="menu" class="section menu-section">
@@ -480,6 +501,7 @@
 <script src="static/js/auth.js"></script>
 <script src="static/js/families-roster.js"></script>
 <script src="static/js/image-compress.js"></script>
+<script src="static/js/nav.js"></script>
 <script src="static/js/main.js"></script>
 </body>
 </html>

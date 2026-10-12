@@ -3,7 +3,6 @@
    pantalla de estado de la cuenta.
    ════════════════════════════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-  initNav();
   populateFamiliaSelect();
   initTabs();
   initForms();
@@ -11,12 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   JunteAuth.subscribe(renderState);
 });
-
-function initNav() {
-  const toggle = document.getElementById("navToggle");
-  const links  = document.getElementById("navLinks");
-  if (toggle) toggle.addEventListener("click", () => links.classList.toggle("open"));
-}
 
 function populateFamiliaSelect() {
   const sel = document.getElementById("regFamilia");

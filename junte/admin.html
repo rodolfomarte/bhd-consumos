@@ -18,10 +18,19 @@
       <span class="nav-title">Junté Familiar 2026</span>
     </a>
   </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
   <ul class="nav-links" id="navLinks">
     <li><a href="/">Inicio</a></li>
+    <li><a href="/#mural">Mural</a></li>
+    <li><a href="/live">📸 Live</a></li>
+    <li><a href="/#itinerario">Itinerario</a></li>
+    <li><a href="/#villas">Villas</a></li>
+    <li><a href="/#mapa">🗺️ Mapa</a></li>
+    <li><a href="/#menu">Menú</a></li>
     <li><a href="/retos">🏆 Retos</a></li>
+    <li><a href="/#historia">Historia</a></li>
     <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+    <li id="navAdminLink" style="display:none"><a href="/admin" class="active-nav">🔐 Administrador</a></li>
   </ul>
 </nav>
 
@@ -81,7 +90,7 @@
     </div>
 
     <!-- Pestañas de usuarios -->
-    <div class="admin-tabs">
+    <div class="admin-tabs" id="userAdminTabs">
       <button class="admin-tab active" data-tab="pending">⏳ Pendientes <span class="admin-tab-count" id="tabCountPending">0</span></button>
       <button class="admin-tab" data-tab="approved">✅ Aprobados <span class="admin-tab-count" id="tabCountApproved">0</span></button>
       <button class="admin-tab" data-tab="rejected">❌ Rechazados <span class="admin-tab-count" id="tabCountRejected">0</span></button>
@@ -100,6 +109,57 @@
     <div class="admin-tab-panel" id="tabPanel-suspended">
       <div id="listSuspended" class="admin-user-list"></div>
     </div>
+
+    <!-- ═══ GESTIÓN DE RETOS ═══════════════════════════════════════════ -->
+    <div class="section-header" style="margin-top:44px">
+      <h2 class="section-title" style="font-size:1.6rem">🏆 Gestión de Retos</h2>
+      <p class="section-sub">Capitanes de villa · publicar el reto · revisar entregas</p>
+    </div>
+
+    <div class="admin-tabs" id="retosAdminTabs">
+      <button class="admin-tab active" data-retotab="capitanes">👑 Capitanes</button>
+      <button class="admin-tab" data-retotab="publicar">📣 Publicar Reto</button>
+      <button class="admin-tab" data-retotab="evidencias">📋 Evidencias <span class="admin-tab-count" id="tabCountEvid">0</span></button>
+    </div>
+
+    <div class="admin-tab-panel active" id="retosPanel-capitanes">
+      <p class="account-hint" style="margin-bottom:14px">Elige, entre las familias aprobadas de cada villa, quién será su capitán. El capitán es el único (junto a ti) que puede enviar o reemplazar la evidencia de su villa.</p>
+      <div id="capitanesGrid" class="villas-grid"></div>
+    </div>
+
+    <div class="admin-tab-panel" id="retosPanel-publicar">
+      <div class="admin-settings-card">
+        <h3 style="color:var(--green-dark);margin-bottom:4px">Crea la identidad de tu equipo</h3>
+        <p class="account-hint" style="margin-bottom:14px">Cada villa debe elegir un nombre de equipo y un eslogan que represente su alegría, unión y espíritu familiar, y entregar una foto o video corto presentándolo.</p>
+        <form id="publishRetoForm" class="account-form">
+          <label>Villas a publicar</label>
+          <div class="reto-villa-checks" id="publishVillaChecks">
+            <label><input type="checkbox" value="palmera" /> 🌴 Villa Palmera</label>
+            <label><input type="checkbox" value="perez" /> 🌿 Villa Pérez</label>
+            <label><input type="checkbox" value="cafe" /> ☕ Villa Café</label>
+            <label><input type="checkbox" value="cereza" /> 🍒 Villa Cereza</label>
+            <label><input type="checkbox" value="bosque" /> 🌲 Villa Bosque</label>
+            <label><input type="checkbox" id="publishVillaAll" /> <strong>Todas</strong></label>
+          </div>
+          <label>Puntuación</label>
+          <input type="number" id="publishPuntos" class="input-inline" value="100" min="0" step="10" />
+          <label>Fecha límite</label>
+          <input type="datetime-local" id="publishFechaLimite" class="input-inline" />
+          <label>Estado</label>
+          <select id="publishEstado" class="select-input">
+            <option value="disponible">✅ Disponible (visible para las villas elegidas)</option>
+            <option value="bloqueado">🔒 Bloqueado (ocultar de nuevo)</option>
+          </select>
+          <p class="account-msg" id="publishRetoMsg"></p>
+          <button type="submit" class="btn-primary" style="width:100%;margin-top:6px">Guardar y publicar</button>
+        </form>
+      </div>
+      <div id="retosStatusList" class="admin-user-list"></div>
+    </div>
+
+    <div class="admin-tab-panel" id="retosPanel-evidencias">
+      <div id="evidenciasList" class="admin-user-list"></div>
+    </div>
   </div>
 </section>
 
@@ -110,6 +170,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script src="static/js/firebase-init.js"></script>
 <script src="static/js/auth.js"></script>
+<script src="static/js/families-roster.js"></script>
+<script src="static/js/nav.js"></script>
 <script src="static/js/admin.js"></script>
 </body>
 </html>

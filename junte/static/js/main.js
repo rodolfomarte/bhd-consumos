@@ -25,12 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Cada paso va en su propio try/catch: si uno falla, los demás igual
   // corren (antes, un solo error aquí dejaba la página entera en blanco).
   const steps = [
-    ["nav",              initNav],
     ["pestañas por día", initDayTabs],
     ["modal de subida",  initUploadModal],
     ["modal de foto",    initPhotoModal],
     ["textos editables", loadEditableTexts],
     ["cuenta regresiva", initCountdown],
+    ["zoom del mapa",    initMapaZoom],
   ];
   for (const [label, fn] of steps) {
     try { fn(); } catch (err) { console.error(`Error iniciando ${label}:`, err); }
@@ -88,11 +88,21 @@ function initCountdown() {
   tick(); setInterval(tick, 1000);
 }
 
-/* ══════════════════ NAV ═════════════════════════════════════════════════ */
-function initNav() {
-  const toggle = document.getElementById("navToggle");
-  const links  = document.getElementById("navLinks");
-  if (toggle) toggle.addEventListener("click", () => links.classList.toggle("open"));
+/* ══════════════════ MAPA — zoom al tocar ═══════════════════════════════
+   La imagen ya tiene un onerror en el HTML que muestra la tarjeta de
+   respaldo sin depender de JS — esto solo añade el acercamiento opcional. */
+function initMapaZoom() {
+  const img   = document.getElementById("mapaImg");
+  const modal = document.getElementById("mapaZoomModal");
+  const bg    = document.getElementById("mapaZoomModalBg");
+  const close = document.getElementById("mapaZoomClose");
+  if (!img || !modal || !bg || !close) return;
+
+  const open  = () => { modal.classList.add("open"); document.body.style.overflow = "hidden"; };
+  const shut  = () => { modal.classList.remove("open"); document.body.style.overflow = ""; };
+  img.addEventListener("click", open);
+  bg.addEventListener("click", shut);
+  close.addEventListener("click", shut);
 }
 
 /* ══════════════════ PESTAÑAS POR DÍA (Itinerario / Menú) ══════════════════

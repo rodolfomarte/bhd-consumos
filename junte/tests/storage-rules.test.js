@@ -95,3 +95,39 @@ test("solo admin puede borrar fotos del feed Live en Storage", async () => {
   const admin = testEnv.authenticatedContext("admin1", { email: "admin@junte.internal", admin: true });
   await assertSucceeds(admin.storage().ref("live/xyz789").delete());
 });
+
+test("retos: el capitán de la villa SÍ puede subir evidencia a SU villa", async () => {
+  const alice = testEnv.authenticatedContext("alice", {
+    email: "alice@junte.internal", approved: true, familia: "perez", capitanVilla: "perez",
+  });
+  await assertSucceeds(alice.storage().ref("retos/perez/identidad-equipo/foto.png").put(PNG_BYTES, png));
+});
+
+test("retos: el capitán NO puede subir evidencia a OTRA villa (de verdad, no solo CSS)", async () => {
+  const bob = testEnv.authenticatedContext("bob", {
+    email: "bob@junte.internal", approved: true, familia: "cafe", capitanVilla: "cafe",
+  });
+  await assertFails(bob.storage().ref("retos/perez/identidad-equipo/foto.png").put(PNG_BYTES, png));
+});
+
+test("retos: un aprobado que NO es capitán de ninguna villa no puede subir evidencia", async () => {
+  const carol = testEnv.authenticatedContext("carol", {
+    email: "carol@junte.internal", approved: true, familia: "perez",
+  });
+  await assertFails(carol.storage().ref("retos/perez/identidad-equipo/foto.png").put(PNG_BYTES, png));
+});
+
+test("retos: admin puede subir evidencia a cualquier villa", async () => {
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@junte.internal", admin: true });
+  await assertSucceeds(admin.storage().ref("retos/bosque/identidad-equipo/video.png").put(PNG_BYTES, png));
+});
+
+test("retos: cualquier aprobado puede LEER la evidencia (pero no escribirla)", async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.storage().ref("retos/perez/identidad-equipo/foto.png").put(PNG_BYTES, png);
+  });
+  const dave = testEnv.authenticatedContext("dave", {
+    email: "dave@junte.internal", approved: true, familia: "cafe",
+  });
+  await assertSucceeds(dave.storage().ref("retos/perez/identidad-equipo/foto.png").getMetadata());
+});

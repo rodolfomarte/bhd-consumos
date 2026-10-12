@@ -25,10 +25,12 @@
     <li><a href="/live">📸 Live</a></li>
     <li><a href="/#itinerario">Itinerario</a></li>
     <li><a href="/#villas">Villas</a></li>
+    <li><a href="/#mapa">🗺️ Mapa</a></li>
     <li><a href="/#menu">Menú</a></li>
     <li><a href="/retos" class="active-nav">🏆 Retos</a></li>
     <li><a href="/#historia">Historia</a></li>
     <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+    <li id="navAdminLink" style="display:none"><a href="/admin">🔐 Administrador</a></li>
   </ul>
 </nav>
 
@@ -131,6 +133,42 @@
   </div>
 </section>
 
+<!-- ═══ MODAL DETALLE DE RETO + ENTREGA DEL CAPITÁN ═══════════════════════ -->
+<div class="overlay-modal" id="retoDetailModal">
+  <div class="overlay-modal-bg" id="retoDetailModalBg"></div>
+  <div class="overlay-modal-box upload-box-modal reto-detail-box">
+    <button class="modal-close-x" id="retoDetailClose">&times;</button>
+    <h3 id="detailVillaName">Villa</h3>
+    <p class="reto-detail-titulo" id="detailTitulo"></p>
+    <p class="reto-detail-objetivo" id="detailObjetivo"></p>
+    <div class="reto-detail-meta">
+      <span>🏅 <strong id="detailPuntos">—</strong></span>
+      <span>⏰ <strong id="detailFecha">—</strong></span>
+    </div>
+
+    <div id="detailViewOnly" class="reto-evid-view" style="display:none"></div>
+
+    <form id="detailCaptainForm" class="upload-form" style="display:none">
+      <p class="account-hint">Eres el capitán de esta villa — envía o actualiza la entrega del equipo.</p>
+      <p class="account-msg" id="evidCurrentStatus" style="display:none"></p>
+      <label>Nombre del equipo</label>
+      <input type="text" id="evidNombreEquipo" class="input-inline" maxlength="60" required />
+      <label>Eslogan</label>
+      <input type="text" id="evidEslogan" class="input-inline" maxlength="120" required />
+      <label>Foto o video del equipo</label>
+      <label class="file-label" for="evidFileInput">
+        📁 Elegir foto o video
+        <input type="file" id="evidFileInput" accept="image/*,video/*" hidden />
+      </label>
+      <p class="account-hint" id="evidFileName"></p>
+      <label>O una respuesta en texto (opcional)</label>
+      <textarea id="evidRespuesta" class="textarea-input" rows="2"></textarea>
+      <p class="upload-status-msg" id="detailEvidMsg"></p>
+      <button type="submit" class="btn-primary">Enviar entrega</button>
+    </form>
+  </div>
+</div>
+
 <footer class="site-footer">
   <div class="footer-inner">
     <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junté Familiar 2026</p>
@@ -145,8 +183,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script src="static/js/firebase-init.js"></script>
 <script src="static/js/auth.js"></script>
+<script src="static/js/nav.js"></script>
+<script src="static/js/image-compress.js"></script>
 <script src="static/js/retos.js"></script>
 </body>
 </html>

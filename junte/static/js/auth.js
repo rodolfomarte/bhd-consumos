@@ -17,6 +17,7 @@ const JunteAuth = (() => {
     profile: null,       // doc de users/{uid}
     isAdmin: false,
     isApproved: false,
+    capitanVilla: null,  // slug de villa, o null — viene del custom claim
   };
 
   function slugify(s) {
@@ -61,7 +62,7 @@ const JunteAuth = (() => {
     if (profileUnsub) { profileUnsub(); profileUnsub = null; }
 
     if (!user) {
-      state = { loading: false, user: null, profile: null, isAdmin: false, isApproved: false };
+      state = { loading: false, user: null, profile: null, isAdmin: false, isApproved: false, capitanVilla: null };
       notify();
       return;
     }
@@ -70,14 +71,32 @@ const JunteAuth = (() => {
     try {
       const tokenResult = await user.getIdTokenResult();
       state.isAdmin = tokenResult.claims.admin === true;
+      state.capitanVilla = tokenResult.claims.capitanVilla || null;
     } catch (err) {
       console.error("Token claims error:", err);
       state.isAdmin = false;
+      state.capitanVilla = null;
     }
     computeDerived();
     notify();
     watchProfile(user.uid);
   });
+
+  // Fuerza un token fresco y vuelve a leer sus claims — para el instante en
+  // que un admin acaba de asignar a alguien como capitán y esa persona
+  // necesita ese permiso YA, sin tener que cerrar sesión y volver a entrar.
+  async function refreshClaims() {
+    if (!fbAuth.currentUser) return;
+    try {
+      const tokenResult = await fbAuth.currentUser.getIdTokenResult(true);
+      state.isAdmin = tokenResult.claims.admin === true;
+      state.capitanVilla = tokenResult.claims.capitanVilla || null;
+      computeDerived();
+      notify();
+    } catch (err) {
+      console.error("refreshClaims error:", err);
+    }
+  }
 
   function subscribe(cb) {
     listeners.push(cb);
@@ -171,5 +190,6 @@ const JunteAuth = (() => {
     loginAccount,
     logoutAccount,
     callFunction,
+    refreshClaims,
   };
 })();

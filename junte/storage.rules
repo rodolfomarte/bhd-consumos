@@ -26,9 +26,18 @@ service firebase.storage {
     function myFamilia() {
       return ('familia' in request.auth.token) ? request.auth.token.familia : null;
     }
+    // Mirrored onto the Auth custom claims by netlify/functions/set-captain.js.
+    function capitanVilla() {
+      return ('capitanVilla' in request.auth.token) ? request.auth.token.capitanVilla : null;
+    }
     function isImage() {
       return request.resource.contentType.matches('image/.*')
         && request.resource.size < 15 * 1024 * 1024;
+    }
+    // Retos evidence can be a short video, not just a photo — bigger cap.
+    function isEvidenceFile() {
+      return (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/.*'))
+        && request.resource.size < 60 * 1024 * 1024;
     }
 
     // mural/<familia>/<anio>  (one slot per family per year)
@@ -43,6 +52,14 @@ service firebase.storage {
       allow read: if isAdmin() || isApproved();
       allow write: if isAdmin() || (isApproved() && isImage());
       allow delete: if isAdmin();
+    }
+
+    // retos/<villa>/<retoId>/<fileName>  (evidence the villa's captain submits)
+    match /retos/{villa}/{retoId}/{fileName} {
+      allow read: if isAdmin() || isApproved();
+      allow write: if isAdmin()
+        || (isApproved() && capitanVilla() == villa && isEvidenceFile());
+      allow delete: if isAdmin() || (isApproved() && capitanVilla() == villa);
     }
 
     match /{allPaths=**} {

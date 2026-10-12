@@ -591,7 +591,16 @@ body.admin-mode .live-filter-section { top: 98px; }
   border-radius: var(--radius); overflow: hidden;
   box-shadow: var(--shadow-lg); background: #ddd;
 }
-.mapa-img { width: 100%; height: auto; display: block; }
+.mapa-img { width: 100%; height: auto; display: block; cursor: zoom-in; }
+.mapa-fallback-card {
+  background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  padding: 32px 20px; text-align: center; display: flex; flex-direction: column;
+  gap: 12px; align-items: center;
+}
+.mapa-fallback-dir { color: var(--text-mid); font-weight: 600; }
+.mapa-zoom-box { width: min(1000px, 96vw); max-height: 92vh; padding: 16px; }
+.mapa-zoom-scroll { max-height: 82vh; overflow: auto; -webkit-overflow-scrolling: touch; touch-action: pinch-zoom pan-x pan-y; }
+.mapa-zoom-img { width: 100%; height: auto; display: block; }
 .mapa-leyenda {
   background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 22px 20px; border-top: 5px solid var(--green-dark);
@@ -702,11 +711,33 @@ body.admin-mode .live-filter-section { top: 98px; }
   .photo-view-info-side { max-height: none; }
   .villas-grid { grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); }
   .mapa-layout { grid-template-columns: 1fr; }
-  .mapa-embed-wrap { aspect-ratio: 4/3; }
+  .mapa-embed-wrap {
+    aspect-ratio: auto; max-height: 60vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mapa-img { width: auto; max-width: 100%; height: auto; max-height: 60vh; object-fit: contain; margin: 0 auto; cursor: zoom-in; }
 }
+body.nav-open-lock { overflow: hidden; }
 @media (max-width: 640px) {
-  .nav-links { display:none; flex-direction:column; position:absolute; top:60px; left:0; right:0; background:var(--green-dark); padding:12px 16px; gap:4px; }
-  .nav-links.open { display:flex; }
+  .nav-links {
+    display: none; flex-direction: column;
+    position: fixed; top: 60px; left: 0; right: 0;
+    background: var(--green-dark);
+    padding: 10px 16px calc(14px + env(safe-area-inset-bottom));
+    gap: 2px;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
+    z-index: 1200;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  body.admin-mode .nav-links {
+    top: 98px;
+    max-height: calc(100vh - 98px);
+    max-height: calc(100dvh - 98px);
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { display: block; padding: 13px 14px; font-size: .95rem; }
   .nav-toggle { display:block; }
   .villas-grid { grid-template-columns:1fr; }
   .historia-stats { gap:12px; }
@@ -921,3 +952,50 @@ body.admin-mode .live-filter-section { top: 98px; }
 }
 .retos-leaderboard-placeholder h3 { color: var(--green-dark); margin-bottom: 8px; }
 .retos-leaderboard-placeholder p { color: #999; font-size: .9rem; }
+
+/* ─── Reto detalle (modal) ──────────────────────────────────────────────── */
+.reto-detail-box { width: 440px; max-width: 95vw; padding: 32px 28px; }
+.reto-detail-box h3 { font-size: 1.3rem; color: var(--green-dark); margin-bottom: 4px; }
+.reto-detail-titulo { font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--gold-dark); margin-bottom: 8px; }
+.reto-detail-objetivo { color: var(--text-mid); font-size: .92rem; line-height: 1.5; margin-bottom: 14px; }
+.reto-detail-meta { display: flex; gap: 18px; font-size: .85rem; color: var(--text-mid); margin-bottom: 18px; flex-wrap: wrap; }
+.reto-detail-meta strong { color: var(--green-dark); }
+.reto-evid-view h4 { color: var(--green-dark); font-size: 1rem; margin-bottom: 8px; }
+.reto-evid-view p { font-size: .9rem; color: var(--text-mid); margin-bottom: 6px; }
+.reto-evid-view a { color: var(--green-mid); font-weight: 700; }
+.reto-admin-comment {
+  background: #FFF8E1; border-left: 3px solid var(--gold); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 8px 12px; font-size: .85rem; color: #7a4a00; margin-top: 8px;
+}
+
+/* ─── Panel admin: Capitanes de Villa ───────────────────────────────────── */
+.capitan-card {
+  background: var(--white); border-radius: var(--radius); padding: 18px 16px;
+  box-shadow: var(--shadow); text-align: center; border-top: 5px solid var(--green-dark);
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
+}
+.capitan-card .villa-icon { font-size: 1.8rem; }
+.capitan-card .villa-name { font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--green-dark); }
+.capitan-actual {
+  background: #E8F5E9; color: var(--green-mid); font-size: .82rem; font-weight: 700;
+  padding: 6px 12px; border-radius: 14px; width: 100%;
+}
+.capitan-actual.ninguno { background: #f0f0f0; color: var(--text-mid); font-weight: 600; }
+.capitan-card select { width: 100%; margin-top: 4px; }
+.capitan-card-actions { display: flex; gap: 6px; width: 100%; }
+.capitan-card-actions button { flex: 1; }
+
+/* ─── Panel admin: Publicar reto ────────────────────────────────────────── */
+.reto-villa-checks { display: flex; flex-direction: column; gap: 8px; background: #f8f8f8; border-radius: var(--radius-sm); padding: 12px 14px; }
+.reto-villa-checks label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; color: var(--text-dark); text-transform: none; letter-spacing: 0; }
+.reto-villa-checks input { width: 16px; height: 16px; }
+.reto-status-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ─── Panel admin: Evidencias ────────────────────────────────────────────── */
+.evidencia-card { display: flex; flex-direction: column; gap: 6px; }
+.evidencia-card .admin-user-info { gap: 2px; }
+.evidencia-card select, .evidencia-card textarea { margin-top: 6px; }
+.evidencia-file-link { font-size: .82rem; color: var(--green-mid); font-weight: 700; }

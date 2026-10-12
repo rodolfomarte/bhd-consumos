@@ -240,3 +240,93 @@ test("retos: admin SIEMPRE puede leer, incluso bloqueado; solo admin puede escri
   const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertFails(alice.firestore().collection("retos").doc("palmera").update({ estado: "disponible" }));
 });
+
+test("retoCaptains: solo el admin puede leer o escribir, ni siquiera el propio capitán", async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retoCaptains").doc("perez").set({ uid: "alice", nombre: "Alice" });
+  });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", approved: true, capitanVilla: "perez" });
+  const aliceDb = alice.firestore();
+  await assertFails(aliceDb.collection("retoCaptains").doc("perez").get());
+  await assertFails(aliceDb.collection("retoCaptains").doc("perez").set({ uid: "bob" }));
+
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
+  await assertSucceeds(admin.firestore().collection("retoCaptains").doc("perez").get());
+});
+
+test("retoEvidencias: el capitán de la villa SÍ puede crear la entrega de SU villa", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", approved: true, capitanVilla: "perez" });
+  await assertSucceeds(
+    alice.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").set({
+      villa: "perez", retoId: "identidad-equipo", uid: "alice",
+      nombreEquipo: "Los Pérez", eslogan: "Unidos somos más", estado: "pendiente",
+    })
+  );
+});
+
+test("retoEvidencias: un capitán NO puede crear la entrega de OTRA villa (de verdad, no solo CSS)", async () => {
+  await seedUser("bob", { nombre: "Bob", familia: "cafe", familiaLabel: "Café", email: "bob@test.com", status: "approved" });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@test.com", approved: true, capitanVilla: "cafe" });
+  await assertFails(
+    bob.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").set({
+      villa: "perez", retoId: "identidad-equipo", uid: "bob",
+      nombreEquipo: "Intrusos", eslogan: "x", estado: "pendiente",
+    })
+  );
+});
+
+test("retoEvidencias: un aprobado SIN ser capitán NO puede crear ni editar evidencia, pero SÍ puede leerla", async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").set({
+      villa: "perez", retoId: "identidad-equipo", uid: "alice",
+      nombreEquipo: "Los Pérez", eslogan: "Unidos somos más", estado: "pendiente",
+    });
+  });
+  await seedUser("carol", { nombre: "Carol", familia: "cafe", familiaLabel: "Café", email: "carol@test.com", status: "approved" });
+  const carol = testEnv.authenticatedContext("carol", { email: "carol@test.com", approved: true, capitanVilla: null });
+  const carolDb = carol.firestore();
+  await assertSucceeds(carolDb.collection("retoEvidencias").doc("perez_identidad-equipo").get());
+  await assertFails(carolDb.collection("retoEvidencias").doc("perez_identidad-equipo").update({ eslogan: "hackeado" }));
+  await assertFails(
+    carolDb.collection("retoEvidencias").doc("cafe_identidad-equipo").set({
+      villa: "cafe", retoId: "identidad-equipo", uid: "carol", nombreEquipo: "x", eslogan: "x", estado: "pendiente",
+    })
+  );
+});
+
+test("retoEvidencias: pendiente/rechazada de aprobación NO puede leer evidencias", async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").set({
+      villa: "perez", retoId: "identidad-equipo", uid: "alice", estado: "pendiente",
+    });
+  });
+  const dave = testEnv.authenticatedContext("dave", { email: "dave@test.com", approved: false });
+  await assertFails(dave.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").get());
+});
+
+test("retoEvidencias: el capitán NO puede auto-aprobar su propia entrega; solo el admin cambia el estado", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").set({
+      villa: "perez", retoId: "identidad-equipo", uid: "alice",
+      nombreEquipo: "Los Pérez", eslogan: "Unidos somos más", estado: "pendiente",
+    });
+  });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", approved: true, capitanVilla: "perez" });
+  const aliceDb = alice.firestore();
+  await assertFails(
+    aliceDb.collection("retoEvidencias").doc("perez_identidad-equipo")
+      .update({ villa: "perez", retoId: "identidad-equipo", uid: "alice", estado: "aprobada" })
+  );
+  // Pero SÍ puede re-enviar (editar) mientras sigue en pendiente.
+  await assertSucceeds(
+    aliceDb.collection("retoEvidencias").doc("perez_identidad-equipo")
+      .update({ villa: "perez", retoId: "identidad-equipo", uid: "alice", nombreEquipo: "Los Pérez FC", eslogan: "Unidos somos más", estado: "pendiente" })
+  );
+
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
+  await assertSucceeds(
+    admin.firestore().collection("retoEvidencias").doc("perez_identidad-equipo").update({ estado: "aprobada" })
+  );
+});
