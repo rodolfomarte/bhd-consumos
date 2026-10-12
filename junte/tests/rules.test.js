@@ -182,3 +182,20 @@ test("solo el admin puede escribir el toggle de galería general", async () => {
   const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
   await assertSucceeds(admin.firestore().collection("config").doc("settings").set({ galleryEnabledForUsers: true }));
 });
+
+test("publicContent (villas/agenda/menú): cualquiera puede leerlo, incluso sin sesión", async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("publicContent").doc("main").set({ villas: [] });
+  });
+  const anon = testEnv.unauthenticatedContext();
+  await assertSucceeds(anon.firestore().collection("publicContent").doc("main").get());
+});
+
+test("publicContent: solo el admin puede escribirlo (ni siquiera un usuario aprobado)", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertFails(alice.firestore().collection("publicContent").doc("main").set({ villas: [] }));
+
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
+  await assertSucceeds(admin.firestore().collection("publicContent").doc("main").set({ villas: [] }));
+});

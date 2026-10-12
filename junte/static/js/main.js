@@ -60,12 +60,12 @@ const DEFAULT_DATA = {
 };
 
 /* ══════════════════ ESTADO GLOBAL ════════════════════════════════════════ */
-let appData    = loadData();
+let appData    = seedFromRoster(); // valor inicial mientras llega Firestore
 let adminMode  = false;         // derivado de JunteAuth (custom claim), ya no de una contraseña
 let authState  = { loading: true };
 let muralCache = {};            // { "<familiaSlug>_<anio>": {...doc} }
 let galleryEnabled = false;
-let muralUnsub = null, settingsUnsub = null;
+let muralUnsub = null, settingsUnsub = null, contentUnsub = null;
 
 let uploadTargetAnio    = null;
 let selectedFile        = null;
@@ -74,10 +74,7 @@ let currentModalKey     = null; // "<familiaSlug>_<anio>"
 
 /* ══════════════════════ INIT ═════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-  renderTimelines();
   initTabs();
-  renderVillas();
-  renderMenus();
   initMenuTabs();
   initNav();
   initUploadModal();
@@ -85,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initReveal();
   loadEditableTexts();
   initCountdown();
+  watchContent(); // villas/agenda/menu — públicos, no dependen de sesión
 
   JunteAuth.subscribe(onAuthState);
 });
@@ -106,14 +104,37 @@ function onAuthState(state) {
   renderMuralGrid();
 }
 
-/* ══════════════════ PERSISTENCIA (contenido general, no fotos) ═══════════ */
-function loadData() {
+/* ══════════════════ CONTENIDO PÚBLICO (villas/agenda/menú) ═══════════════
+   Vive en Firestore (publicContent/main) — lectura pública, solo el admin
+   escribe. Antes vivía en localStorage y por eso "desaparecía" al entrar
+   desde otro navegador: nunca estuvo realmente compartido. */
+function watchContent() {
+  if (contentUnsub) return;
+  contentUnsub = fbDb.collection("publicContent").doc("main").onSnapshot(
+    async snap => {
+      if (snap.exists) {
+        appData = snap.data();
+      } else if (authState.isAdmin) {
+        appData = seedFromRoster();
+        await seedPublicContent();
+        return; // el propio set() disparará este listener de nuevo
+      } else {
+        appData = seedFromRoster(); // aún no sembrado — se ve el contenido por defecto mientras tanto
+      }
+      renderVillas();
+      renderMenus();
+      renderTimelines();
+      renderMuralGrid();
+      forceReveal(); // el contenido llega async, después de que initReveal() ya observó el DOM inicial
+    },
+    err => console.error("Contenido público error:", err)
+  );
+}
+
+async function seedPublicContent() {
   try {
-    const s = localStorage.getItem("junte_data");
-    const d = s ? JSON.parse(s) : null;
-    if (!d || !d.villas) return seedFromRoster();
-    return d;
-  } catch { return seedFromRoster(); }
+    await fbDb.collection("publicContent").doc("main").set(seedFromRoster());
+  } catch (err) { console.error("Seed contenido público error:", err); }
 }
 
 function seedFromRoster() {
@@ -123,7 +144,8 @@ function seedFromRoster() {
 }
 
 function saveData() {
-  localStorage.setItem("junte_data", JSON.stringify(appData));
+  fbDb.collection("publicContent").doc("main").set(appData)
+    .catch(err => { console.error("Guardar contenido error:", err); alert("No se pudo guardar: " + err.message); });
 }
 
 /* ══════════════════ HELPERS ════════════════════════════════════════════ */

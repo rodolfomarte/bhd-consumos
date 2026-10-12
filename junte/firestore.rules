@@ -64,6 +64,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    /* ───────────── publicContent/{docId} ─────────────
+       Villas/agenda/menu — public marketing info, same as the rest of the
+       landing page (itinerary, map, history). Readable by anyone, no login
+       required; only the admin can edit it. Separate from config/ on
+       purpose: that collection requires approval to read, this one must not. */
+    match /publicContent/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     /* ───────────── muralPhotos/{photoId} ─────────────
        One photo per family per year. Doc id must be "<familia>_<anio>" so a
        family can't spoof another family's slot. */
