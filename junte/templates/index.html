@@ -228,8 +228,11 @@
   </div>
   <div class="villas-grid">
 
-    <div class="villa-card">
-      <div class="villa-icon">🌴</div>
+    <div class="villa-card" data-villa="palmera">
+      <div class="reto-card-media" data-role="media">
+        <div class="villa-icon" data-role="icon">🌴</div>
+        <img class="reto-card-photo" data-role="photo" style="display:none" alt="Foto del equipo de Villa Palmera" />
+      </div>
       <div class="villa-name">Villa Palmera</div>
       <ul class="villa-familia-list">
         <li class="villa-familia-item"><span class="familia-nombre">Miguel De la Cruz</span></li>
@@ -240,8 +243,11 @@
       </ul>
     </div>
 
-    <div class="villa-card">
-      <div class="villa-icon">🌿</div>
+    <div class="villa-card" data-villa="perez">
+      <div class="reto-card-media" data-role="media">
+        <div class="villa-icon" data-role="icon">🌿</div>
+        <img class="reto-card-photo" data-role="photo" style="display:none" alt="Foto del equipo de Villa Pérez" />
+      </div>
       <div class="villa-name">Villa Perez</div>
       <ul class="villa-familia-list">
         <li class="villa-familia-item"><span class="familia-nombre">Mariel Perez</span></li>
@@ -252,8 +258,11 @@
       </ul>
     </div>
 
-    <div class="villa-card">
-      <div class="villa-icon">☕</div>
+    <div class="villa-card" data-villa="cafe">
+      <div class="reto-card-media" data-role="media">
+        <div class="villa-icon" data-role="icon">☕</div>
+        <img class="reto-card-photo" data-role="photo" style="display:none" alt="Foto del equipo de Villa Café" />
+      </div>
       <div class="villa-name">Villa Café</div>
       <ul class="villa-familia-list">
         <li class="villa-familia-item"><span class="familia-nombre">Bernardo Rodriguez</span></li>
@@ -264,8 +273,11 @@
       </ul>
     </div>
 
-    <div class="villa-card">
-      <div class="villa-icon">🍒</div>
+    <div class="villa-card" data-villa="cereza">
+      <div class="reto-card-media" data-role="media">
+        <div class="villa-icon" data-role="icon">🍒</div>
+        <img class="reto-card-photo" data-role="photo" style="display:none" alt="Foto del equipo de Villa Cereza" />
+      </div>
       <div class="villa-name">Villa Cereza</div>
       <ul class="villa-familia-list">
         <li class="villa-familia-item"><span class="familia-nombre">Pedro Pangola</span></li>
@@ -275,8 +287,11 @@
       </ul>
     </div>
 
-    <div class="villa-card">
-      <div class="villa-icon">🌲</div>
+    <div class="villa-card" data-villa="bosque">
+      <div class="reto-card-media" data-role="media">
+        <div class="villa-icon" data-role="icon">🌲</div>
+        <img class="reto-card-photo" data-role="photo" style="display:none" alt="Foto del equipo de Villa Bosque" />
+      </div>
       <div class="villa-name">Villa Bosque</div>
       <ul class="villa-familia-list">
         <li class="villa-familia-item"><span class="familia-nombre">Rodolfo Marte</span></li>
@@ -289,6 +304,17 @@
 
   </div>
 </section>
+
+<!-- ═══ MODAL ZOOM DE FOTO DE VILLA (identidad del equipo, una vez aprobada) ═ -->
+<div class="overlay-modal" id="villaPhotoZoomModal">
+  <div class="overlay-modal-bg" id="villaPhotoZoomModalBg"></div>
+  <div class="overlay-modal-box mapa-zoom-box">
+    <button class="modal-close-x" id="villaPhotoZoomClose">&times;</button>
+    <div class="mapa-zoom-scroll">
+      <img src="" alt="Foto del equipo ampliada" class="mapa-zoom-img" id="villaPhotoZoomImg" />
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MAPA ══════════════════════════════════════════════════════════════ -->
 <section id="mapa" class="mapa-section section" style="display:none">

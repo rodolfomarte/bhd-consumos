@@ -31,6 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ["textos editables", loadEditableTexts],
     ["cuenta regresiva", initCountdown],
     ["zoom del mapa",    initMapaZoom],
+    ["fotos de villas",  watchVillaImagenesHome],
+    ["zoom de villas",   initVillaPhotoZoom],
   ];
   for (const [label, fn] of steps) {
     try { fn(); } catch (err) { console.error(`Error iniciando ${label}:`, err); }
@@ -118,6 +120,58 @@ function initMapaZoom() {
   img.addEventListener("click", open);
   bg.addEventListener("click", shut);
   close.addEventListener("click", shut);
+}
+
+/* ══════════════════ FOTO DE IDENTIDAD DE CADA VILLA ═══════════════════════
+   villaImagenes/<slug> — la misma colección que usa /retos. En cuanto el
+   admin aprueba la entrega de "Crea la identidad de tu equipo", esa foto
+   reemplaza el ícono aquí también. Mientras no exista (o falle la lectura,
+   p.ej. visitante sin cuenta), se queda el ícono de siempre — nunca un
+   hueco en blanco. */
+const VILLA_SLUGS_HOME = ["palmera", "perez", "cafe", "cereza", "bosque"];
+
+function watchVillaImagenesHome() {
+  if (typeof fbDb === "undefined") return;
+  VILLA_SLUGS_HOME.forEach(slug => {
+    fbDb.collection("villaImagenes").doc(slug).onSnapshot(
+      snap => {
+        try { applyVillaImagenHome(slug, snap.exists ? snap.data() : null); }
+        catch (err) { console.error(`Error mostrando foto de ${slug}:`, err); }
+      },
+      err => console.error(`Error leyendo foto de ${slug}:`, err)
+    );
+  });
+}
+
+function applyVillaImagenHome(slug, data) {
+  const card = document.querySelector(`.villa-card[data-villa="${slug}"]`);
+  if (!card) return;
+  const icon  = card.querySelector('[data-role="icon"]');
+  const photo = card.querySelector('[data-role="photo"]');
+  if (!icon || !photo) return;
+  if (data && data.url) {
+    photo.src = data.url;
+    photo.style.display = "block";
+    icon.style.display = "none";
+  } else {
+    photo.style.display = "none";
+    icon.style.display = "";
+  }
+}
+
+function initVillaPhotoZoom() {
+  const modal = document.getElementById("villaPhotoZoomModal");
+  const img   = document.getElementById("villaPhotoZoomImg");
+  if (!modal || !img) return;
+
+  const open  = src => { if (!src) return; img.src = src; modal.classList.add("open"); document.body.style.overflow = "hidden"; };
+  const close = () => { modal.classList.remove("open"); document.body.style.overflow = ""; };
+
+  document.getElementById("villaPhotoZoomModalBg").addEventListener("click", close);
+  document.getElementById("villaPhotoZoomClose").addEventListener("click", close);
+  document.querySelectorAll('.villa-card .reto-card-photo[data-role="photo"]').forEach(el => {
+    el.addEventListener("click", () => open(el.src));
+  });
 }
 
 /* ══════════════════ PESTAÑAS POR DÍA (Itinerario / Menú) ══════════════════
