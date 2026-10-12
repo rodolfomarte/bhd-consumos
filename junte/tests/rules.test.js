@@ -199,3 +199,44 @@ test("publicContent: solo el admin puede escribirlo (ni siquiera un usuario apro
   const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
   await assertSucceeds(admin.firestore().collection("publicContent").doc("main").set({ villas: [] }));
 });
+
+test("retos: aprobada NO puede leer un reto bloqueado (de verdad, no solo CSS)", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retos").doc("palmera").set({ estado: "bloqueado", titulo: "secreto" });
+  });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertFails(alice.firestore().collection("retos").doc("palmera").get());
+});
+
+test("retos: aprobada SÍ puede leer un reto ya publicado (disponible)", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retos").doc("palmera").set({ estado: "disponible", titulo: "Busca el tesoro" });
+  });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertSucceeds(alice.firestore().collection("retos").doc("palmera").get());
+});
+
+test("retos: pendiente NO puede leer ni un reto publicado", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "pending" });
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retos").doc("palmera").set({ estado: "disponible", titulo: "Busca el tesoro" });
+  });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertFails(alice.firestore().collection("retos").doc("palmera").get());
+});
+
+test("retos: admin SIEMPRE puede leer, incluso bloqueado; solo admin puede escribir", async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("retos").doc("palmera").set({ estado: "bloqueado" });
+  });
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
+  const adminDb = admin.firestore();
+  await assertSucceeds(adminDb.collection("retos").doc("palmera").get());
+  await assertSucceeds(adminDb.collection("retos").doc("palmera").update({ estado: "disponible" }));
+
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertFails(alice.firestore().collection("retos").doc("palmera").update({ estado: "disponible" }));
+});

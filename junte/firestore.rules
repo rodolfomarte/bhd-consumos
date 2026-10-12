@@ -122,5 +122,15 @@ service cloud.firestore {
       allow read: if isAdmin() || isApproved();
       allow write: if isAdmin();
     }
+
+    /* ───────────── retos/{villaSlug} ─────────────
+       "Retos por Villas". A challenge stays genuinely invisible to
+       non-admins while status == 'bloqueado' — enforced here, not just
+       hidden with CSS on the client. Only the admin publishes/edits them. */
+    match /retos/{villaSlug} {
+      allow read: if isAdmin()
+        || (isApproved() && resource.data.estado is string && resource.data.estado != 'bloqueado');
+      allow write: if isAdmin();
+    }
   }
 }

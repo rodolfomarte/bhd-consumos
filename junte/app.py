@@ -18,5 +18,9 @@ def cuenta():
 def admin():
     return render_template("admin.html")
 
+@app.route("/retos")
+def retos():
+    return render_template("retos.html")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

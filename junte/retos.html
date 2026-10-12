@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retos por Villas · Junté Familiar CND 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-brand">
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <span class="nav-logo-text">CND</span>
+      <span class="nav-divider">|</span>
+      <span class="nav-title">Junté Familiar 2026</span>
+    </a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/">Inicio</a></li>
+    <li><a href="/#mural">Mural</a></li>
+    <li><a href="/live">📸 Live</a></li>
+    <li><a href="/#itinerario">Itinerario</a></li>
+    <li><a href="/#villas">Villas</a></li>
+    <li><a href="/#menu">Menú</a></li>
+    <li><a href="/retos" class="active-nav">🏆 Retos</a></li>
+    <li><a href="/#historia">Historia</a></li>
+    <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+  </ul>
+</nav>
+
+<section class="section retos-hero-section">
+  <div class="section-header">
+    <h2 class="section-title">🏆 Retos por Villas</h2>
+    <p class="section-sub gold" style="font-weight:700">La unión, la creatividad y la alegría de cada familia serán puestas a prueba.</p>
+  </div>
+  <p class="retos-intro">
+    Durante el Junté Familiar, cada villa recibirá retos especiales para completar en equipo.
+    Habrá desafíos de creatividad, cooperación, movimiento, observación y diversión.
+    Todos podrán participar: adultos, jóvenes y niños.
+  </p>
+
+  <!-- El mensaje de bloqueo SIEMPRE está en el HTML — la cuenta regresiva
+       es un añadido debajo, nunca un reemplazo. Si el conteo falla, esto
+       queda igual de visible. -->
+  <div class="retos-lock-banner">
+    <p class="retos-lock-msg">🔒 Los retos serán revelados el viernes 16 de octubre.</p>
+    <div class="countdown" id="retosCountdown">
+      <div class="cd-block"><span id="retos-cd-dias">--</span><small>Días</small></div>
+      <div class="cd-block"><span id="retos-cd-horas">--</span><small>Horas</small></div>
+      <div class="cd-block"><span id="retos-cd-min">--</span><small>Min</small></div>
+      <div class="cd-block"><span id="retos-cd-seg">--</span><small>Seg</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">Villas participantes</h2>
+    <p class="section-sub">Cada equipo verá su reto aquí mismo en cuanto se publique</p>
+  </div>
+  <div class="villas-grid" id="retosVillasGrid">
+
+    <div class="reto-card" data-villa="palmera">
+      <div class="villa-icon">🌴</div>
+      <div class="villa-name">Villa Palmera</div>
+      <span class="reto-status-badge locked" data-role="status">🔒 Reto bloqueado</span>
+      <p class="reto-msg" data-role="msg">Disponible el viernes 16</p>
+      <button class="btn-reto-ver" data-role="btn" disabled>Ver reto</button>
+    </div>
+
+    <div class="reto-card" data-villa="perez">
+      <div class="villa-icon">🌿</div>
+      <div class="villa-name">Villa Pérez</div>
+      <span class="reto-status-badge locked" data-role="status">🔒 Reto bloqueado</span>
+      <p class="reto-msg" data-role="msg">Disponible el viernes 16</p>
+      <button class="btn-reto-ver" data-role="btn" disabled>Ver reto</button>
+    </div>
+
+    <div class="reto-card" data-villa="cafe">
+      <div class="villa-icon">☕</div>
+      <div class="villa-name">Villa Café</div>
+      <span class="reto-status-badge locked" data-role="status">🔒 Reto bloqueado</span>
+      <p class="reto-msg" data-role="msg">Disponible el viernes 16</p>
+      <button class="btn-reto-ver" data-role="btn" disabled>Ver reto</button>
+    </div>
+
+    <div class="reto-card" data-villa="cereza">
+      <div class="villa-icon">🍒</div>
+      <div class="villa-name">Villa Cereza</div>
+      <span class="reto-status-badge locked" data-role="status">🔒 Reto bloqueado</span>
+      <p class="reto-msg" data-role="msg">Disponible el viernes 16</p>
+      <button class="btn-reto-ver" data-role="btn" disabled>Ver reto</button>
+    </div>
+
+    <div class="reto-card" data-villa="bosque">
+      <div class="villa-icon">🌲</div>
+      <div class="villa-name">Villa Bosque</div>
+      <span class="reto-status-badge locked" data-role="status">🔒 Reto bloqueado</span>
+      <p class="reto-msg" data-role="msg">Disponible el viernes 16</p>
+      <button class="btn-reto-ver" data-role="btn" disabled>Ver reto</button>
+    </div>
+
+  </div>
+</section>
+
+<section class="section retos-rules-section">
+  <div class="section-header">
+    <h2 class="section-title">Cómo funcionará</h2>
+  </div>
+  <ol class="retos-rules-list">
+    <li>Cada villa participará como un equipo.</li>
+    <li>Los retos estarán diseñados para compartir en familia.</li>
+    <li>Ninguna actividad debe ser peligrosa, ofensiva o excluir a niños, adultos mayores o personas con limitaciones físicas.</li>
+    <li>Cada reto indicará sus instrucciones, puntuación y evidencia requerida.</li>
+    <li>La creatividad, el trabajo en equipo, el respeto y la honestidad serán más importantes que la velocidad.</li>
+    <li>Rodolfo publicará y validará los retos desde el panel administrador.</li>
+  </ol>
+</section>
+
+<section class="section retos-premios-section">
+  <div class="retos-premios-banner">
+    <p>🎁 Habrá puntos, reconocimientos y sorpresas para las villas participantes.</p>
+  </div>
+  <div class="retos-leaderboard-placeholder">
+    <h3>📊 Tabla de posiciones</h3>
+    <p>La tabla de posiciones aparecerá cuando comiencen los retos.</p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junté Familiar 2026</p>
+    <p class="footer-lugar">📍 Rancho Las Guazaras, Jarabacoa</p>
+    <p class="footer-fecha">16 de Octubre 2026</p>
+  </div>
+</footer>
+
+<!-- Firebase SDK — opcional: si hay retos publicados en Firestore, esta
+     pantalla los refleja; si falla por lo que sea, el HTML de arriba
+     (todo bloqueado) se queda tal cual, nunca se vacía. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="static/js/firebase-init.js"></script>
+<script src="static/js/auth.js"></script>
+<script src="static/js/retos.js"></script>
+</body>
+</html>

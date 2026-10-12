@@ -15,4 +15,6 @@ firebase.initializeApp(FIREBASE_CONFIG);
 
 const fbAuth    = firebase.auth();
 const fbDb      = firebase.firestore();
-const fbStorage = firebase.storage();
+// Algunas páginas (ej. /retos) no cargan el SDK de Storage porque no lo
+// necesitan — evita que eso tire un error que bloquee el resto del script.
+const fbStorage = (typeof firebase.storage === "function") ? firebase.storage() : null;
