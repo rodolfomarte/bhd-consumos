@@ -86,36 +86,47 @@ let currentModalKey     = null; // "<familiaSlug>_<anio>"
 
 /* ══════════════════════ INIT ═════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-  initTabs();
-  initMenuTabs();
-  initNav();
-  initUploadModal();
-  initPhotoModal();
-  initReveal();
-  loadEditableTexts();
-  initCountdown();
-  watchContent(); // villas/agenda/menu — públicos, no dependen de sesión
+  // Pinta de inmediato con los datos por defecto — no depende de que
+  // Firestore/Auth respondan primero. Si lo hacen, vuelve a pintar con lo
+  // real. Cada paso va en su propio try/catch: si uno falla, los demás
+  // igual corren (antes, un solo error aquí dejaba la página entera en
+  // blanco sin ningún aviso).
+  const steps = [
+    ["tabs",            initTabs],
+    ["tabs de menú",    initMenuTabs],
+    ["nav",             initNav],
+    ["modal de subida", initUploadModal],
+    ["modal de foto",   initPhotoModal],
+    ["scroll-reveal",   initReveal],
+    ["textos editables",loadEditableTexts],
+    ["cuenta regresiva",initCountdown],
+    ["villas",          renderVillas],
+    ["menú",            renderMenus],
+    ["itinerario",      renderTimelines],
+    ["actividades",     renderActividades],
+  ];
+  for (const [label, fn] of steps) {
+    try { fn(); } catch (err) { console.error(`Error iniciando ${label}:`, err); }
+  }
 
+  watchContent(); // reemplaza lo de arriba con lo real en cuanto Firestore responda
   JunteAuth.subscribe(onAuthState);
 });
 
 function onAuthState(state) {
   authState = state;
   adminMode = state.isAdmin;
-  document.body.classList.toggle("admin-mode", adminMode);
-  document.getElementById("adminBadge").style.display = adminMode ? "flex" : "none";
-  document.querySelectorAll(".editable").forEach(el => el.contentEditable = adminMode ? "true" : "false");
-  document.querySelectorAll(".admin-only").forEach(el => el.style.display = adminMode ? "block" : "none");
+  try {
+    document.body.classList.toggle("admin-mode", adminMode);
+    document.getElementById("adminBadge").style.display = adminMode ? "flex" : "none";
+    document.querySelectorAll(".editable").forEach(el => el.contentEditable = adminMode ? "true" : "false");
+    document.querySelectorAll(".admin-only").forEach(el => el.style.display = adminMode ? "block" : "none");
+  } catch (err) { console.error("Error en onAuthState (admin UI):", err); }
 
-  renderVillas();
-  renderMenus();
-  renderTimelines();
-  renderActividades();
-
-  watchSettings();
-  watchMural();
-  renderMuralGate();
-  renderMuralGrid();
+  for (const fn of [renderVillas, renderMenus, renderTimelines, renderActividades,
+                     watchSettings, watchMural, renderMuralGate, renderMuralGrid]) {
+    try { fn(); } catch (err) { console.error(`Error en onAuthState (${fn.name}):`, err); }
+  }
 }
 
 /* ══════════════════ CONTENIDO PÚBLICO (villas/agenda/menú) ═══════════════
@@ -137,11 +148,9 @@ function watchContent() {
       } else {
         appData = seedFromRoster(); // aún no sembrado — se ve el contenido por defecto mientras tanto
       }
-      renderVillas();
-      renderMenus();
-      renderTimelines();
-      renderActividades();
-      renderMuralGrid();
+      for (const fn of [renderVillas, renderMenus, renderTimelines, renderActividades, renderMuralGrid]) {
+        try { fn(); } catch (err) { console.error(`Error en watchContent (${fn.name}):`, err); }
+      }
       forceReveal(); // el contenido llega async, después de que initReveal() ya observó el DOM inicial
     },
     err => console.error("Contenido público error:", err)
