@@ -158,38 +158,115 @@
   </div>
 </div>
 
-<!-- ═══ ITINERARIO ════════════════════════════════════════════════════════ -->
+<!-- ═══ ITINERARIO (estático, sin JS) ════════════════════════════════════ -->
 <section id="itinerario" class="section itinerario-section">
   <div class="section-header">
-    <h2 class="section-title editable" data-key="itin-titulo">Itinerario</h2>
-    <p class="section-sub editable" data-key="itin-sub">Tres días llenos de familia, diversión y recuerdos</p>
+    <h2 class="section-title">Itinerario</h2>
+    <p class="section-sub">Tres días llenos de familia, diversión y recuerdos</p>
   </div>
-  <div class="day-tabs">
-    <button class="day-tab active" data-day="viernes">Viernes 16</button>
-    <button class="day-tab" data-day="sabado">Sábado 17</button>
-    <button class="day-tab" data-day="domingo">Domingo 18</button>
-  </div>
-  <div class="day-panel active" id="panel-viernes"><div class="timeline" id="timeline-viernes"></div></div>
-  <div class="day-panel" id="panel-sabado"><div class="timeline" id="timeline-sabado"></div></div>
-  <div class="day-panel" id="panel-domingo"><div class="timeline" id="timeline-domingo"></div></div>
-  <div class="actividades-extra">
-    <h3 class="editable" data-key="act-titulo">Actividades disponibles</h3>
-    <div class="act-grid" id="actGrid"></div>
-    <div class="admin-only" style="display:none" id="btnAddActividad">
-      <button class="btn-admin-add" onclick="addActividad()">+ Agregar actividad</button>
+  <div class="info-stack">
+
+    <div class="info-card">
+      <h3>Viernes</h3>
+      <ul class="info-list">
+        <li><span class="info-hora">6:30</span> Salida para Jarabacoa</li>
+        <li><span class="info-hora">10:00</span> Llegada al Rancho Guazaras</li>
+        <li><span class="info-hora">10:30</span> Actividades</li>
+        <li><span class="info-hora">12:30</span> Almuerzo</li>
+        <li><span class="info-hora">1:00</span> Inflables</li>
+        <li><span class="info-hora">5:00</span> Musica DJ</li>
+        <li><span class="info-hora">8:00</span> Kareoke / Fogata</li>
+      </ul>
     </div>
+
+    <div class="info-card">
+      <h3>Sabado</h3>
+      <ul class="info-list">
+        <li><span class="info-hora">8:00</span> Desayuno</li>
+        <li><span class="info-hora">9:30</span> Actividades Deportivas.</li>
+        <li><span class="info-hora">12:00</span> Almuerzo</li>
+        <li><span class="info-hora">2:30</span> Pool pathy ( Fiesta de Espuma</li>
+        <li><span class="info-hora">3:00</span> Musica DJ</li>
+        <li><span class="info-hora">6:30</span> Cine</li>
+        <li><span class="info-hora">9:00</span> Kareoke</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Domingo</h3>
+      <ul class="info-list">
+        <li><span class="info-hora">6:30</span> Senderismo</li>
+        <li><span class="info-hora">9:00</span> Desayuno</li>
+        <li><span class="info-hora">11:30</span> Almuerzo</li>
+        <li><span class="info-hora">3:00</span> Salida del Rancho</li>
+      </ul>
+    </div>
+
   </div>
 </section>
 
-<!-- ═══ VILLAS ════════════════════════════════════════════════════════════ -->
+<!-- ═══ VILLAS / FAMILIAS POR VILLA (estático, sin JS) ═══════════════════ -->
 <section id="villas" class="villas-section">
   <div class="section-header">
-    <h2 class="section-title editable" data-key="villas-titulo">Nuestras Villas</h2>
-    <p class="section-sub editable" data-key="villas-sub">Rancho Las Guazaras · Tu hogar por el fin de semana</p>
+    <h2 class="section-title">Nuestras Villas</h2>
+    <p class="section-sub">Rancho Las Guazaras · Tu hogar por el fin de semana</p>
   </div>
-  <div class="villas-grid" id="villasGrid"></div>
-  <div class="admin-only" style="display:none" id="btnAddVilla">
-    <button class="btn-admin-add" onclick="addVilla()">+ Agregar villa</button>
+  <div class="info-stack">
+
+    <div class="info-card">
+      <h3>Villa Palmera</h3>
+      <ul class="info-list plain">
+        <li>Miguel De la Cruz</li>
+        <li>Margarita Felix</li>
+        <li>Selia Peralta</li>
+        <li>Jhon Daniel</li>
+        <li>Adolfo Perez</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Villa Perez</h3>
+      <ul class="info-list plain">
+        <li>Mariel Perez</li>
+        <li>Orlando Tejeda</li>
+        <li>Haronid Rodriguez</li>
+        <li>Joel Abad</li>
+        <li>Johelmi Abad</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Villa Café</h3>
+      <ul class="info-list plain">
+        <li>Bernardo Rodriguez</li>
+        <li>Joel Hereaux</li>
+        <li>Gabriel Perez</li>
+        <li>Manuel Serulle</li>
+        <li>Martha de la Rosa</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Villa Cereza</h3>
+      <ul class="info-list plain">
+        <li>Pedro Pangola</li>
+        <li>Francisco Silverio</li>
+        <li>Maribel Rosario</li>
+        <li>Reynaldo Perez</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Villa Bosque</h3>
+      <ul class="info-list plain">
+        <li>Rodolfo Marte</li>
+        <li>Vladimir Mendez</li>
+        <li>Julio Sanchez</li>
+        <li>Elias Gomez</li>
+        <li>Maria Garcia</li>
+      </ul>
+    </div>
+
   </div>
 </section>
 
@@ -204,7 +281,7 @@
       <img src="static/img/mapa.png"
            alt="Mapa Rancho Las Guazaras" class="mapa-img" />
     </div>
-    <div class="mapa-leyenda reveal">
+    <div class="mapa-leyenda">
       <h3 class="mapa-leyenda-title">📍 Leyenda</h3>
       <div class="mapa-leyenda-list">
         <div class="leyenda-group">
@@ -232,20 +309,75 @@
   </div>
 </section>
 
-<!-- ═══ MENÚ ══════════════════════════════════════════════════════════════ -->
+<!-- ═══ MENÚ (estático, sin JS) ═══════════════════════════════════════════ -->
 <section id="menu" class="section menu-section">
   <div class="section-header">
-    <h2 class="section-title editable" data-key="menu-titulo">Menú del Junte</h2>
-    <p class="section-sub editable" data-key="menu-sub">Sabor dominicano para toda la familia</p>
+    <h2 class="section-title">Menú del Junte</h2>
+    <p class="section-sub">Sabor dominicano para toda la familia</p>
   </div>
-  <div class="day-tabs">
-    <button class="day-tab active" data-menu="viernes">Viernes 16</button>
-    <button class="day-tab" data-menu="sabado">Sábado 17</button>
-    <button class="day-tab" data-menu="domingo">Domingo 18</button>
+  <div class="info-stack">
+
+    <div class="info-card">
+      <h3>Viernes</h3>
+      <p class="menu-meal-label">Almuerzo</p>
+      <ul class="info-list plain">
+        <li>Arroz Blanco</li>
+        <li>Arroz de Moro</li>
+        <li>Pollo</li>
+        <li>Cerdo Asado</li>
+        <li>Ensalada Verde</li>
+        <li>Papas Fritas</li>
+        <li>Ensalada Rusa</li>
+      </ul>
+      <p class="menu-meal-label">Cena</p>
+      <ul class="info-list plain">
+        <li>Parillada</li>
+        <li>Hot Dog.</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Sabado</h3>
+      <p class="menu-meal-label">Desayuno</p>
+      <ul class="info-list plain">
+        <li>3 Golpes</li>
+        <li>Pan con chocolate</li>
+      </ul>
+      <p class="menu-meal-label">Almuerzo</p>
+      <ul class="info-list plain">
+        <li>Arroz Blanco</li>
+        <li>Arroz Moro</li>
+        <li>Yuca</li>
+        <li>Chivo</li>
+        <li>Pollo Frito</li>
+        <li>Ensalada verde / Rusa</li>
+      </ul>
+      <p class="menu-meal-label">Cena</p>
+      <ul class="info-list plain">
+        <li>Parillada</li>
+        <li>Hot Dog.</li>
+        <li>Mondongo</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Domingo</h3>
+      <p class="menu-meal-label">Desayuno</p>
+      <ul class="info-list plain">
+        <li>3 Golpes</li>
+        <li>Pan con chocolate</li>
+      </ul>
+      <p class="menu-meal-label">Almuerzo</p>
+      <ul class="info-list plain">
+        <li>Arroz Blanco</li>
+        <li>Pollo Frito</li>
+        <li>Ensalada Verde</li>
+        <li>Papas Fritas</li>
+        <li>Sancocho</li>
+      </ul>
+    </div>
+
   </div>
-  <div class="menu-panel active" id="menu-viernes"><div class="menu-cols" id="menu-cols-viernes"></div></div>
-  <div class="menu-panel" id="menu-sabado"><div class="menu-cols" id="menu-cols-sabado"></div></div>
-  <div class="menu-panel" id="menu-domingo"><div class="menu-cols" id="menu-cols-domingo"></div></div>
 </section>
 
 <!-- ═══ HISTORIA ══════════════════════════════════════════════════════════ -->

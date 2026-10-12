@@ -818,3 +818,38 @@ body.admin-mode .live-filter-section { top: 98px; }
 .admin-tab-panel { display: none; }
 .admin-tab-panel.active { display: block; }
 .act-item.admin-editable { display: inline-flex; align-items: center; gap: 6px; padding-right: 8px; }
+
+/* ─── Itinerario / Villas / Menú — HTML estático, sin JS, sin posición
+   absoluta ni alturas fijas. Tarjetas simples apiladas, pensado mobile-first
+   (nada de ancho fijo, todo fluye con el contenido). ──────────────────── */
+.info-stack {
+  display: flex; flex-direction: column; gap: 16px;
+  max-width: 640px; margin: 0 auto; padding: 0 4px;
+}
+.info-card {
+  background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px 20px; width: 100%; box-sizing: border-box;
+}
+.info-card h3 {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.1rem;
+  color: var(--green-dark); margin: 0 0 10px;
+}
+.info-list { list-style: none; margin: 0; padding: 0; }
+.info-list li {
+  display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #eee;
+  font-size: .92rem; color: var(--text-mid); word-break: break-word;
+}
+.info-list li:last-child { border-bottom: none; }
+.info-list.plain li { display: block; }
+.info-hora {
+  font-weight: 700; color: var(--green-mid); flex-shrink: 0; min-width: 48px;
+}
+.menu-meal-label {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .85rem;
+  color: var(--gold-dark); text-transform: uppercase; letter-spacing: .5px;
+  margin: 14px 0 4px;
+}
+.menu-meal-label:first-of-type { margin-top: 0; }
+@media (max-width: 480px) {
+  .info-card { padding: 14px 16px; }
+}
