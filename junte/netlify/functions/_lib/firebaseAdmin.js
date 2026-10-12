@@ -1,4 +1,5 @@
 const admin = require("firebase-admin");
+// (redeploy trigger: pick up FIREBASE_SERVICE_ACCOUNT_BASE64 after it was added in Netlify)
 
 /**
  * Lazily initializes the Admin SDK from env vars so a missing/incomplete
