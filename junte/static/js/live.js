@@ -124,7 +124,7 @@ function watchSettings() {
 function renderLiveGate() {
   const wrap = document.getElementById("liveGateWrap");
   if (!wrap) return;
-  const unlocked = authState.isAdmin || authState.isApprovedVerified;
+  const unlocked = authState.isAdmin || authState.isApproved;
   wrap.style.display = unlocked ? "none" : "block";
   document.getElementById("liveFeedSection").style.display = unlocked ? "" : "none";
   document.getElementById("btnOpenLiveUpload").style.display = unlocked ? "" : "none";
@@ -132,10 +132,8 @@ function renderLiveGate() {
 
   if (!authState.user) {
     wrap.innerHTML = gateHtml("👪 Inicia sesión para ver Junté en Vivo", "El feed en vivo es solo para familias registradas y aprobadas.");
-  } else if (!authState.emailVerified) {
-    wrap.innerHTML = gateHtml("📧 Verifica tu correo", "Confirma tu correo desde el enlace que te enviamos para continuar.");
   } else if (authState.profile?.status === "pending") {
-    wrap.innerHTML = gateHtml("⏳ Pendiente de aprobación", "Un administrador debe aprobar tu cuenta antes de ver o subir fotos.");
+    wrap.innerHTML = gateHtml("⏳ Pendiente de aprobación de Rodolfo", "Tu cuenta está esperando revisión. Te avisaremos cuando esté lista.");
   } else if (authState.profile?.status === "rejected") {
     wrap.innerHTML = gateHtml("❌ Solicitud rechazada", "Contacta al administrador del Junté si crees que es un error.", true);
   } else if (authState.profile?.status === "suspended") {
@@ -158,7 +156,7 @@ function gateHtml(title, msg, denied) {
 function watchPhotos() {
   if (photosUnsub) { photosUnsub(); photosUnsub = null; }
   photos = [];
-  if (!authState.isApprovedVerified && !authState.isAdmin) { renderFeed(); return; }
+  if (!authState.isApproved && !authState.isAdmin) { renderFeed(); return; }
 
   const canSeeAll = authState.isAdmin || galleryEnabled;
   const query = (canSeeAll
@@ -232,7 +230,7 @@ function setLiveFilter(actId) {
 function renderFeed() {
   const feed  = document.getElementById("liveFeed");
   const empty = document.getElementById("liveFeedEmpty");
-  if (!authState.isAdmin && !authState.isApprovedVerified) { feed.innerHTML = ""; empty.style.display = "none"; return; }
+  if (!authState.isAdmin && !authState.isApproved) { feed.innerHTML = ""; empty.style.display = "none"; return; }
 
   let list = [...photos];
   if (activeActivity) list = list.filter(p => p.actividadId === activeActivity);
@@ -285,7 +283,7 @@ function updateHeroCount() {
 /* ══════════════════ UPLOAD MODAL ═════════════════════════════════════════ */
 function initUploadModal() {
   document.getElementById("btnOpenLiveUpload").addEventListener("click", () => {
-    if (!authState.isApprovedVerified) { alert("Necesitas una cuenta aprobada para subir fotos. Ve a Mi Cuenta."); return; }
+    if (!authState.isApproved) { alert("Necesitas una cuenta aprobada para subir fotos. Ve a Mi Cuenta."); return; }
     openLiveUploadModal(null);
   });
   document.getElementById("btnCancelLiveUpload").addEventListener("click", closeLiveUploadModal);
@@ -454,7 +452,7 @@ function renderLiveComments() {
 }
 
 async function doLiveLike() {
-  if (!authState.isApprovedVerified) return;
+  if (!authState.isApproved) return;
   const photo = photos.find(p => p.id === currentPhotoId);
   if (!photo) return;
   if ((photo.likes || []).some(l => l.uid === authState.user.uid)) { alert("¡Ya diste like!"); return; }
@@ -470,7 +468,7 @@ async function doLiveLike() {
 }
 
 async function doLiveComment() {
-  if (!authState.isApprovedVerified) return;
+  if (!authState.isApproved) return;
   const texto = document.getElementById("liveCommentTexto").value.trim();
   if (!texto) { alert("Escribe un comentario."); return; }
 

@@ -1,5 +1,6 @@
 /* ════════════════════════════════════════════════════════════════════════
-   cuenta.js — login, registro y pantalla de estado de la cuenta.
+   cuenta.js — login, registro (usuario + contraseña, sin correo) y
+   pantalla de estado de la cuenta.
    ════════════════════════════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
@@ -9,13 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initStatusActions();
 
   JunteAuth.subscribe(renderState);
-
-  if (new URLSearchParams(location.search).get("approved") === "1") {
-    const hint = document.createElement("p");
-    hint.className = "account-msg";
-    hint.textContent = "🎉 Tu cuenta fue aprobada — inicia sesión para continuar.";
-    document.getElementById("loginForm").prepend(hint);
-  }
 });
 
 function initNav() {
@@ -57,7 +51,7 @@ function initForms() {
     err.style.display = "none";
     try {
       await JunteAuth.loginAccount({
-        email: document.getElementById("loginEmail").value,
+        username: document.getElementById("loginUsername").value,
         password: document.getElementById("loginPassword").value,
       });
     } catch (ex) {
@@ -74,7 +68,7 @@ function initForms() {
       await JunteAuth.registerAccount({
         nombre:       document.getElementById("regNombre").value,
         familiaLabel: document.getElementById("regFamilia").value,
-        email:        document.getElementById("regEmail").value,
+        username:     document.getElementById("regUsername").value,
         password:     document.getElementById("regPassword").value,
       });
     } catch (ex) {
@@ -86,22 +80,6 @@ function initForms() {
 
 function initStatusActions() {
   document.getElementById("btnLogout").addEventListener("click", () => JunteAuth.logoutAccount());
-
-  document.getElementById("btnResendVerify").addEventListener("click", async () => {
-    const msg = document.getElementById("verifyMsg");
-    try {
-      await JunteAuth.resendVerification();
-      msg.textContent = "✅ Correo reenviado.";
-    } catch (ex) {
-      msg.textContent = "❌ " + ex.message;
-    }
-  });
-
-  document.getElementById("btnCheckVerify").addEventListener("click", async () => {
-    const msg = document.getElementById("verifyMsg");
-    const verified = await JunteAuth.refreshEmailVerified();
-    msg.textContent = verified ? "" : "Aún no se detecta la verificación. Revisa tu correo.";
-  });
 }
 
 function renderState(state) {
@@ -112,13 +90,9 @@ function renderState(state) {
   document.getElementById("accountStatus").style.display = state.user ? "block" : "none";
   if (!state.user) return;
 
-  ["statusVerify","statusPending","statusRejected","statusSuspended","statusApproved"]
+  ["statusPending","statusRejected","statusSuspended","statusApproved"]
     .forEach(id => document.getElementById(id).style.display = "none");
 
-  if (!state.emailVerified) {
-    document.getElementById("statusVerify").style.display = "block";
-    return;
-  }
   if (!state.profile) return; // doc aún no escrito (instante justo tras el registro)
 
   const status = state.profile.status;

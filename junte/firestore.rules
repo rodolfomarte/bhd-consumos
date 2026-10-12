@@ -12,20 +12,14 @@ service cloud.firestore {
       // isn't the admin — guard with 'in' before accessing it.
       return isSignedIn() && ('admin' in request.auth.token) && request.auth.token.admin == true;
     }
-    function emailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
     function myUserDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
-    function hasApprovedProfile() {
+    // Manual admin approval is the ONLY gate — no email verification step.
+    function isApproved() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && myUserDoc().data.status == 'approved';
-    }
-    // Verified email + approved standing: the bar for touching family data.
-    function isApprovedVerified() {
-      return emailVerified() && hasApprovedProfile();
     }
     function myFamilia() {
       return myUserDoc().data.familia;
@@ -44,9 +38,10 @@ service cloud.firestore {
       allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
 
       allow create: if isSignedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['nombre','familia','familiaLabel','email','status','createdAt'])
+        && request.resource.data.keys().hasOnly(['nombre','familia','familiaLabel','username','email','status','createdAt'])
         && request.resource.data.status == 'pending'
         && request.resource.data.email == request.auth.token.email
+        && request.resource.data.username is string && request.resource.data.username.size() >= 3
         && request.resource.data.nombre is string && request.resource.data.nombre.size() > 0 && request.resource.data.nombre.size() <= 80
         && request.resource.data.familia is string && request.resource.data.familia.size() > 0;
 
@@ -65,7 +60,7 @@ service cloud.firestore {
     /* ───────────── config/settings ─────────────
        Admin-only gallery toggle (and any future global switches). */
     match /config/{docId} {
-      allow read: if isAdmin() || isApprovedVerified();
+      allow read: if isAdmin() || isApproved();
       allow write: if isAdmin();
     }
 
@@ -74,9 +69,9 @@ service cloud.firestore {
        family can't spoof another family's slot. */
     match /muralPhotos/{photoId} {
       allow read: if isAdmin()
-        || (isApprovedVerified() && (resource.data.familia == myFamilia() || galleryEnabled()));
+        || (isApproved() && (resource.data.familia == myFamilia() || galleryEnabled()));
 
-      allow create: if (isAdmin() || (isApprovedVerified() && request.resource.data.familia == myFamilia()))
+      allow create: if (isAdmin() || (isApproved() && request.resource.data.familia == myFamilia()))
         && request.resource.data.uploaderUid == request.auth.uid
         && photoId == request.resource.data.familia + '_' + request.resource.data.anio
         && request.resource.data.keys().hasOnly(
@@ -84,10 +79,10 @@ service cloud.firestore {
         && request.resource.data.likes == []
         && request.resource.data.comments == [];
 
-      // Likes/comments can be added by any approved+verified member who can
-      // read the photo; nobody may touch the immutable fields afterward.
+      // Likes/comments can be added by any approved member who can read the
+      // photo; nobody may touch the immutable fields afterward.
       allow update: if isAdmin()
-        || (isApprovedVerified()
+        || (isApproved()
             && (resource.data.familia == myFamilia() || galleryEnabled())
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','comments']));
 
@@ -97,14 +92,14 @@ service cloud.firestore {
     /* ───────────── livePhotos/{photoId} ───────────── */
     match /livePhotos/{photoId} {
       allow read: if isAdmin()
-        || (isApprovedVerified() && (resource.data.familia == myFamilia() || galleryEnabled()));
+        || (isApproved() && (resource.data.familia == myFamilia() || galleryEnabled()));
 
-      allow create: if isApprovedVerified()
+      allow create: if isApproved()
         && request.resource.data.familia == myFamilia()
         && request.resource.data.uploaderUid == request.auth.uid;
 
       allow update: if isAdmin()
-        || (isApprovedVerified()
+        || (isApproved()
             && (resource.data.familia == myFamilia() || galleryEnabled())
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','comments']));
 
@@ -114,7 +109,7 @@ service cloud.firestore {
     /* ───────────── liveActivities/{id} ─────────────
        Admin-managed list of "moments" photos get tagged with. */
     match /liveActivities/{id} {
-      allow read: if isAdmin() || isApprovedVerified();
+      allow read: if isAdmin() || isApproved();
       allow write: if isAdmin();
     }
   }

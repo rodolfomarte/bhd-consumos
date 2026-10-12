@@ -1,5 +1,4 @@
 const { db, auth } = require("./_lib/firebaseAdmin");
-const { sendApprovalEmail } = require("./_lib/email");
 
 const VALID = new Set(["approved", "rejected", "suspended"]);
 
@@ -8,13 +7,12 @@ const VALID = new Set(["approved", "rejected", "suspended"]);
  * Authorization: Bearer <Firebase ID token of an admin>
  * Body: { "uid": "<user to change>", "status": "approved" | "rejected" | "suspended" }
  *
- * This is the ONLY way a user's status changes. It does two things that a
- * plain client-side Firestore write can't:
- *   1. Mirrors approval onto the Auth custom claims (approved/familia) so
- *      storage.rules — which can't read Firestore (unsupported by the
- *      local emulator, so we don't rely on it) — can still enforce
- *      per-family access.
- *   2. Sends the "you're approved" email on approval.
+ * This is the ONLY way a user's status changes — and the only step that
+ * matters now that there's no verification email: approval is a single
+ * manual decision by the admin. It mirrors the result onto the Auth custom
+ * claims (approved/familia) so storage.rules — which can't read Firestore
+ * (unsupported by the local emulator, so we don't rely on it) — can still
+ * enforce per-family access.
  */
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -62,20 +60,7 @@ exports.handler = async (event) => {
       familia: user.familia,
     });
 
-    if (status !== "approved") {
-      return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-    }
-
-    try {
-      await sendApprovalEmail({ to: user.email, nombre: user.nombre });
-      return { statusCode: 200, body: JSON.stringify({ ok: true, emailSent: true }) };
-    } catch (emailErr) {
-      console.error("set-user-status email error:", emailErr);
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ ok: true, emailSent: false, emailError: emailErr.message }),
-      };
-    }
+    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {
     console.error("set-user-status error:", err);
     return { statusCode: 500, body: JSON.stringify({ error: err.message || "Error interno." }) };

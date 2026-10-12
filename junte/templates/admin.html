@@ -28,15 +28,30 @@
 
   <div id="adminLoading" class="account-loading">Cargando…</div>
 
+  <!-- Sin sesión: login directo aquí mismo -->
+  <div id="adminLoginWrap" class="account-box" style="display:none">
+    <h3 style="color:var(--green-dark);margin-bottom:16px">🔐 Entrar como administrador</h3>
+    <form id="adminLoginForm" class="account-form">
+      <label>Usuario</label>
+      <input type="text" id="adminLoginUsername" class="input-inline" autocapitalize="none" autocomplete="username" required />
+      <label>Contraseña</label>
+      <input type="password" id="adminLoginPassword" class="input-inline" autocomplete="current-password" required />
+      <p class="account-error" id="adminLoginError" style="display:none"></p>
+      <button type="submit" class="btn-primary" style="width:100%;margin-top:10px">Entrar</button>
+    </form>
+  </div>
+
+  <!-- Con sesión, pero no es admin -->
   <div id="adminDenied" class="status-card" style="display:none">
     <h3>🔒 Acceso restringido</h3>
-    <p>Esta página es solo para el administrador del Junté. <a href="/cuenta">Inicia sesión</a> con la cuenta de administrador.</p>
+    <p>Esta cuenta no tiene permisos de administrador.</p>
+    <button class="btn-cancel" id="btnAdminDeniedLogout">Cerrar sesión</button>
   </div>
 
   <div id="adminContent" style="display:none">
     <div class="section-header">
       <h2 class="section-title">Panel de Administrador</h2>
-      <p class="section-sub">Aprueba, rechaza o suspende cuentas · Controla la galería general</p>
+      <p class="section-sub">Aprueba o rechaza cuentas · Controla la galería general</p>
     </div>
 
     <div class="admin-settings-card">
@@ -64,23 +79,25 @@
       <p class="account-msg" id="storageWidgetMsg"></p>
     </div>
 
-    <div class="admin-user-groups">
-      <div class="admin-group">
-        <h3>⏳ Pendientes (<span id="countPending">0</span>)</h3>
-        <div id="listPending" class="admin-user-list"></div>
-      </div>
-      <div class="admin-group">
-        <h3>✅ Aprobados (<span id="countApproved">0</span>)</h3>
-        <div id="listApproved" class="admin-user-list"></div>
-      </div>
-      <div class="admin-group">
-        <h3>❌ Rechazados (<span id="countRejected">0</span>)</h3>
-        <div id="listRejected" class="admin-user-list"></div>
-      </div>
-      <div class="admin-group">
-        <h3>🚫 Suspendidos (<span id="countSuspended">0</span>)</h3>
-        <div id="listSuspended" class="admin-user-list"></div>
-      </div>
+    <!-- Pestañas de usuarios -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="pending">⏳ Pendientes <span class="admin-tab-count" id="tabCountPending">0</span></button>
+      <button class="admin-tab" data-tab="approved">✅ Aprobados <span class="admin-tab-count" id="tabCountApproved">0</span></button>
+      <button class="admin-tab" data-tab="rejected">❌ Rechazados <span class="admin-tab-count" id="tabCountRejected">0</span></button>
+      <button class="admin-tab" data-tab="suspended">🚫 Suspendidos <span class="admin-tab-count" id="tabCountSuspended">0</span></button>
+    </div>
+
+    <div class="admin-tab-panel active" id="tabPanel-pending">
+      <div id="listPending" class="admin-user-list"></div>
+    </div>
+    <div class="admin-tab-panel" id="tabPanel-approved">
+      <div id="listApproved" class="admin-user-list"></div>
+    </div>
+    <div class="admin-tab-panel" id="tabPanel-rejected">
+      <div id="listRejected" class="admin-user-list"></div>
+    </div>
+    <div class="admin-tab-panel" id="tabPanel-suspended">
+      <div id="listSuspended" class="admin-user-list"></div>
     </div>
   </div>
 </section>

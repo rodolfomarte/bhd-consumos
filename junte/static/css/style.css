@@ -800,3 +800,20 @@ body.admin-mode .live-filter-section { top: 98px; }
   background: #FFF3E0; border: 2px solid #F57F17; border-radius: var(--radius-sm);
   padding: 10px 14px; font-size: .85rem; color: #7a4a00; margin-top: 10px;
 }
+
+/* ─── Pestañas de usuarios (panel admin) ─────────────────────────────────── */
+.admin-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.admin-tab {
+  background: var(--white); border: 2px solid #ddd; color: var(--text-mid);
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .82rem;
+  padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: var(--transition);
+  display: flex; align-items: center; gap: 6px;
+}
+.admin-tab:hover { border-color: var(--green-mid); }
+.admin-tab.active { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); }
+.admin-tab-count {
+  background: rgba(0,0,0,.08); border-radius: 10px; padding: 1px 7px; font-size: .72rem;
+}
+.admin-tab.active .admin-tab-count { background: rgba(255,255,255,.25); }
+.admin-tab-panel { display: none; }
+.admin-tab-panel.active { display: block; }

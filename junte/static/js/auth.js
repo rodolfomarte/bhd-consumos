@@ -1,17 +1,22 @@
 /* ════════════════════════════════════════════════════════════════════════
-   JunteAuth — registro, login, estado de aprobación, claim de admin.
+   JunteAuth — registro y login con USUARIO + CONTRASEÑA (sin correo).
+   Firebase Auth solo soporta email/password de forma nativa, así que cada
+   usuario se mapea a un correo sintético interno (nunca se envía nada ahí,
+   nunca se muestra al usuario) — esto además nos da unicidad de usuario
+   gratis: Firebase ya rechaza correos duplicados.
    Requiere firebase-init.js cargado antes.
    ════════════════════════════════════════════════════════════════════════ */
 const JunteAuth = (() => {
+  const INTERNAL_DOMAIN = "junte.internal";
+
   let listeners = [];
   let profileUnsub = null;
   let state = {
     loading: true,
     user: null,
     profile: null,       // doc de users/{uid}
-    emailVerified: false,
     isAdmin: false,
-    isApprovedVerified: false,
+    isApproved: false,
   };
 
   function slugify(s) {
@@ -23,13 +28,20 @@ const JunteAuth = (() => {
       .replace(/^-+|-+$/g, "");
   }
 
+  function normalizeUsername(u) {
+    return String(u || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+  }
+
+  function usernameToEmail(u) {
+    return `${normalizeUsername(u)}@${INTERNAL_DOMAIN}`;
+  }
+
   function notify() {
     listeners.forEach(cb => cb({ ...state }));
   }
 
   function computeDerived() {
-    state.isApprovedVerified =
-      !!state.user && state.emailVerified && state.profile?.status === "approved";
+    state.isApproved = !!state.user && state.profile?.status === "approved";
   }
 
   function watchProfile(uid) {
@@ -49,13 +61,12 @@ const JunteAuth = (() => {
     if (profileUnsub) { profileUnsub(); profileUnsub = null; }
 
     if (!user) {
-      state = { loading: false, user: null, profile: null, emailVerified: false, isAdmin: false, isApprovedVerified: false };
+      state = { loading: false, user: null, profile: null, isAdmin: false, isApproved: false };
       notify();
       return;
     }
 
     state.user = user;
-    state.emailVerified = user.emailVerified;
     try {
       const tokenResult = await user.getIdTokenResult();
       state.isAdmin = tokenResult.claims.admin === true;
@@ -76,28 +87,31 @@ const JunteAuth = (() => {
 
   function friendlyError(err) {
     const map = {
-      "auth/email-already-in-use": "Ese correo ya tiene una cuenta. Intenta iniciar sesión.",
-      "auth/invalid-email": "El correo no es válido.",
+      "auth/email-already-in-use": "Ese usuario ya existe — elige otro.",
+      "auth/invalid-email": "Usuario inválido (usa solo letras, números, puntos, guiones).",
       "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
-      "auth/wrong-password": "Contraseña incorrecta.",
-      "auth/invalid-credential": "Correo o contraseña incorrectos.",
-      "auth/user-not-found": "No existe una cuenta con ese correo.",
+      "auth/wrong-password": "Usuario o contraseña incorrectos.",
+      "auth/invalid-credential": "Usuario o contraseña incorrectos.",
+      "auth/user-not-found": "No existe un usuario con ese nombre.",
       "auth/too-many-requests": "Demasiados intentos. Espera un momento e intenta de nuevo.",
     };
     return map[err.code] || err.message || "Ocurrió un error inesperado.";
   }
 
-  async function registerAccount({ nombre, familiaLabel, email, password }) {
+  async function registerAccount({ nombre, familiaLabel, username, password }) {
     nombre = (nombre || "").trim();
     familiaLabel = (familiaLabel || "").trim();
-    email = (email || "").trim();
-    if (!nombre || !familiaLabel || !email || !password) {
+    const user = normalizeUsername(username);
+    if (!nombre || !familiaLabel || !user || !password) {
       throw new Error("Completa todos los campos.");
+    }
+    if (user.length < 3) {
+      throw new Error("El usuario debe tener al menos 3 caracteres.");
     }
 
     let cred;
     try {
-      cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+      cred = await fbAuth.createUserWithEmailAndPassword(usernameToEmail(user), password);
     } catch (err) {
       throw new Error(friendlyError(err));
     }
@@ -107,18 +121,20 @@ const JunteAuth = (() => {
       nombre,
       familia: familiaSlug,
       familiaLabel,
-      email,
+      username: user,
+      email: usernameToEmail(user), // interno — solo para que Firebase Auth funcione
       status: "pending",
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
-    await cred.user.sendEmailVerification();
     return cred.user;
   }
 
-  async function loginAccount({ email, password }) {
+  async function loginAccount({ username, password }) {
+    const user = normalizeUsername(username);
+    if (!user) throw new Error("Escribe tu usuario.");
     try {
-      const cred = await fbAuth.signInWithEmailAndPassword((email || "").trim(), password);
+      const cred = await fbAuth.signInWithEmailAndPassword(usernameToEmail(user), password);
       return cred.user;
     } catch (err) {
       throw new Error(friendlyError(err));
@@ -127,20 +143,6 @@ const JunteAuth = (() => {
 
   async function logoutAccount() {
     await fbAuth.signOut();
-  }
-
-  async function resendVerification() {
-    if (!fbAuth.currentUser) throw new Error("No hay sesión activa.");
-    await fbAuth.currentUser.sendEmailVerification();
-  }
-
-  async function refreshEmailVerified() {
-    if (!fbAuth.currentUser) return false;
-    await fbAuth.currentUser.reload();
-    state.emailVerified = fbAuth.currentUser.emailVerified;
-    computeDerived();
-    notify();
-    return state.emailVerified;
   }
 
   // Shared caller for netlify/functions/* — attaches the current user's ID
@@ -163,12 +165,11 @@ const JunteAuth = (() => {
 
   return {
     slugify,
+    normalizeUsername,
     subscribe,
     registerAccount,
     loginAccount,
     logoutAccount,
-    resendVerification,
-    refreshEmailVerified,
     callFunction,
   };
 })();

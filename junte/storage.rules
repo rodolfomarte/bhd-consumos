@@ -18,11 +18,9 @@ service firebase.storage {
     function isAdmin() {
       return isSignedIn() && ('admin' in request.auth.token) && request.auth.token.admin == true;
     }
-    function emailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
-    function isApprovedVerified() {
-      return isSignedIn() && emailVerified()
+    // Manual admin approval is the ONLY gate — no email verification step.
+    function isApproved() {
+      return isSignedIn()
         && ('approved' in request.auth.token) && request.auth.token.approved == true;
     }
     function myFamilia() {
@@ -35,15 +33,15 @@ service firebase.storage {
 
     // mural/<familia>/<anio>  (one slot per family per year)
     match /mural/{familia}/{anio} {
-      allow read: if isAdmin() || isApprovedVerified();
+      allow read: if isAdmin() || isApproved();
       allow write: if isAdmin()
-        || (isApprovedVerified() && familia == myFamilia() && isImage());
+        || (isApproved() && familia == myFamilia() && isImage());
     }
 
     // live/<photoId>  (one object per shared "live" photo)
     match /live/{photoId} {
-      allow read: if isAdmin() || isApprovedVerified();
-      allow write: if isAdmin() || (isApprovedVerified() && isImage());
+      allow read: if isAdmin() || isApproved();
+      allow write: if isAdmin() || (isApproved() && isImage());
       allow delete: if isAdmin();
     }
 

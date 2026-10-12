@@ -3,7 +3,7 @@ const { computeUsage, getRealUsedBytes } = require("./_lib/storageUsage");
 
 /**
  * POST /.netlify/functions/check-storage-quota
- * Authorization: Bearer <Firebase ID token of an approved, verified user>
+ * Authorization: Bearer <Firebase ID token of an approved user>
  * Body: { "bytes": <size of the photo about to be uploaded> }
  *
  * Called by the client right before it uploads a photo straight to Firebase
@@ -26,10 +26,6 @@ exports.handler = async (event) => {
     }
 
     const decoded = await auth().verifyIdToken(idToken);
-    if (decoded.email_verified !== true) {
-      return { statusCode: 403, body: JSON.stringify({ error: "Verifica tu correo primero." }) };
-    }
-
     if (decoded.admin !== true) {
       const snap = await db().collection("users").doc(decoded.uid).get();
       if (!snap.exists || snap.data().status !== "approved") {

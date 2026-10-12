@@ -362,7 +362,7 @@ function watchSettings() {
 function watchMural() {
   if (muralUnsub) { muralUnsub(); muralUnsub = null; }
   muralCache = {};
-  if (!authState.isApprovedVerified && !authState.isAdmin) { renderMuralGrid(); return; }
+  if (!authState.isApproved && !authState.isAdmin) { renderMuralGrid(); return; }
 
   const canSeeAll = authState.isAdmin || galleryEnabled;
   const query = canSeeAll
@@ -379,15 +379,13 @@ function watchMural() {
 function renderMuralGate() {
   const wrap = document.getElementById("muralGateWrap");
   if (!wrap) return;
-  if (authState.isAdmin || authState.isApprovedVerified) { wrap.style.display = "none"; return; }
+  if (authState.isAdmin || authState.isApproved) { wrap.style.display = "none"; return; }
   wrap.style.display = "block";
 
   if (!authState.user) {
     wrap.innerHTML = gateHtml("👪 Inicia sesión para ver el Mural", "El Mural de Recuerdos es solo para familias registradas y aprobadas.");
-  } else if (!authState.emailVerified) {
-    wrap.innerHTML = gateHtml("📧 Verifica tu correo", "Confirma tu correo desde el enlace que te enviamos para continuar.");
   } else if (authState.profile?.status === "pending") {
-    wrap.innerHTML = gateHtml("⏳ Pendiente de aprobación", "Un administrador debe aprobar tu cuenta antes de que puedas ver o subir fotos.");
+    wrap.innerHTML = gateHtml("⏳ Pendiente de aprobación de Rodolfo", "Tu cuenta está esperando revisión. Te avisaremos cuando esté lista.");
   } else if (authState.profile?.status === "rejected") {
     wrap.innerHTML = gateHtml("❌ Solicitud rechazada", "Contacta al administrador del Junté si crees que es un error.", true);
   } else if (authState.profile?.status === "suspended") {
@@ -410,7 +408,7 @@ function renderMuralGrid() {
   const wrap = document.getElementById("muralGridWrap");
   if (!wrap) return;
 
-  const unlocked = authState.isAdmin || authState.isApprovedVerified;
+  const unlocked = authState.isAdmin || authState.isApproved;
   if (!unlocked) { wrap.innerHTML = ""; document.getElementById("muralProgress").textContent = ""; document.getElementById("muralProgressBar").style.width = "0%"; return; }
 
   const familias = getAllFamilias();
@@ -497,7 +495,7 @@ function setFilter(villaName) {
 /* ────── Upload Modal ────── */
 function initUploadModal() {
   document.getElementById("btnOpenUpload").addEventListener("click", () => {
-    if (!authState.isApprovedVerified) { alert("Necesitas una cuenta aprobada para subir fotos. Ve a Mi Cuenta."); return; }
+    if (!authState.isApproved) { alert("Necesitas una cuenta aprobada para subir fotos. Ve a Mi Cuenta."); return; }
     openUploadModal(myFamiliaSlug(), myFamiliaLabel(), null);
   });
   document.getElementById("photoFileInput").addEventListener("change", async e => {
@@ -663,7 +661,7 @@ function renderComments() {
 }
 
 async function doLike() {
-  if (!authState.isApprovedVerified) return;
+  if (!authState.isApproved) return;
   const photo = muralCache[currentModalKey];
   if (!photo) return;
   if ((photo.likes||[]).some(l => l.uid === authState.user.uid)) { alert("¡Ya diste like!"); return; }
@@ -678,7 +676,7 @@ async function doLike() {
 }
 
 async function doComment() {
-  if (!authState.isApprovedVerified) return;
+  if (!authState.isApproved) return;
   const texto = document.getElementById("commentTexto").value.trim();
   if (!texto) { alert("Escribe un comentario."); return; }
   const comment = { uid: authState.user.uid, nombre: authState.profile.nombre, texto, fecha: new Date().toLocaleDateString("es-DO") };

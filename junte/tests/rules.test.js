@@ -1,5 +1,7 @@
 /* ════════════════════════════════════════════════════════════════════════
    Pruebas de firestore.rules — cuentas pendiente / aprobada / suspendida.
+   Sin paso de verificación de correo: la aprobación manual del admin
+   (status == 'approved') es el único filtro.
 
    Requiere Java + Firebase CLI instalados localmente. Ejecutar con:
      npm install
@@ -51,8 +53,19 @@ async function seedSettings(data) {
 }
 
 test("un usuario nuevo puede crear su propio perfil pendiente", async () => {
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertSucceeds(
+    alice.firestore().collection("users").doc("alice").set({
+      nombre: "Alice", familia: "perez", familiaLabel: "Pérez", username: "alice",
+      email: "alice@test.com", status: "pending",
+      createdAt: new Date(),
+    })
+  );
+});
+
+test("un usuario nuevo NO puede crearse sin campo username", async () => {
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertFails(
     alice.firestore().collection("users").doc("alice").set({
       nombre: "Alice", familia: "perez", familiaLabel: "Pérez",
       email: "alice@test.com", status: "pending",
@@ -62,7 +75,7 @@ test("un usuario nuevo puede crear su propio perfil pendiente", async () => {
 });
 
 test("un usuario nuevo NO puede crearse ya aprobado", async () => {
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertFails(
     alice.firestore().collection("users").doc("alice").set({
       nombre: "Alice", familia: "perez", familiaLabel: "Pérez",
@@ -74,7 +87,7 @@ test("un usuario nuevo NO puede crearse ya aprobado", async () => {
 
 test("un usuario NO puede auto-aprobarse ni auto-asignarse admin", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "pending" });
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertFails(alice.firestore().collection("users").doc("alice").update({ status: "approved" }));
   // El rol admin no es un campo de Firestore: solo un custom claim que el
   // cliente no puede fijar, así que ni siquiera hay un "update" que probar.
@@ -82,7 +95,7 @@ test("un usuario NO puede auto-aprobarse ni auto-asignarse admin", async () => {
 
 test("un admin SÍ puede cambiar el status de cualquier usuario", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "pending" });
-  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", email_verified: true, admin: true });
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
   await assertSucceeds(admin.firestore().collection("users").doc("alice").update({ status: "approved" }));
 });
 
@@ -90,7 +103,7 @@ test("pendiente: no puede leer ni escribir fotos del Mural", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "pending" });
   await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
 
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   const aliceDb = alice.firestore();
   await assertFails(aliceDb.collection("muralPhotos").doc("perez_2025").get());
   await assertFails(
@@ -101,9 +114,17 @@ test("pendiente: no puede leer ni escribir fotos del Mural", async () => {
   );
 });
 
-test("aprobada + verificada: puede subir y leer SU PROPIA foto de familia", async () => {
+test("rechazada: no puede leer ni escribir fotos del Mural", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "rejected" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  await assertFails(alice.firestore().collection("muralPhotos").doc("perez_2025").get());
+});
+
+test("aprobada: puede subir y leer SU PROPIA foto de familia (sin necesitar correo verificado)", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   const aliceDb = alice.firestore();
 
   await assertSucceeds(
@@ -117,7 +138,7 @@ test("aprobada + verificada: puede subir y leer SU PROPIA foto de familia", asyn
 
 test("aprobada: NO puede subir foto a otra familia", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
 
   await assertFails(
     alice.firestore().collection("muralPhotos").doc("gomez_2025").set({
@@ -132,7 +153,7 @@ test("aprobada: NO puede leer fotos de otra familia si la galería general está
   await seedMuralPhoto("gomez_2025", { familia: "gomez", familiaLabel: "Gómez", anio: "2025", url: "x", uploaderUid: "bob", likes: [], comments: [] });
   await seedSettings({ galleryEnabledForUsers: false });
 
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertFails(alice.firestore().collection("muralPhotos").doc("gomez_2025").get());
 });
 
@@ -141,7 +162,7 @@ test("aprobada: SÍ puede leer fotos de otra familia si el admin habilitó la ga
   await seedMuralPhoto("gomez_2025", { familia: "gomez", familiaLabel: "Gómez", anio: "2025", url: "x", uploaderUid: "bob", likes: [], comments: [] });
   await seedSettings({ galleryEnabledForUsers: true });
 
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertSucceeds(alice.firestore().collection("muralPhotos").doc("gomez_2025").get());
 });
 
@@ -149,21 +170,15 @@ test("suspendida: pierde el acceso aunque antes estuviera aprobada", async () =>
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "suspended" });
   await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
 
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
-  await assertFails(alice.firestore().collection("muralPhotos").doc("perez_2025").get());
-});
-
-test("correo no verificado: aunque esté aprobada, no tiene acceso", async () => {
-  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: false });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertFails(alice.firestore().collection("muralPhotos").doc("perez_2025").get());
 });
 
 test("solo el admin puede escribir el toggle de galería general", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
-  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com", email_verified: true });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
   await assertFails(alice.firestore().collection("config").doc("settings").set({ galleryEnabledForUsers: true }));
 
-  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", email_verified: true, admin: true });
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
   await assertSucceeds(admin.firestore().collection("config").doc("settings").set({ galleryEnabledForUsers: true }));
 });

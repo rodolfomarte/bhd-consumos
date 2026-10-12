@@ -40,10 +40,10 @@
       </div>
 
       <form id="loginForm" class="account-form">
-        <label>Correo</label>
-        <input type="email" id="loginEmail" class="input-inline" required />
+        <label>Usuario</label>
+        <input type="text" id="loginUsername" class="input-inline" autocapitalize="none" autocomplete="username" required />
         <label>Contraseña</label>
-        <input type="password" id="loginPassword" class="input-inline" required />
+        <input type="password" id="loginPassword" class="input-inline" autocomplete="current-password" required />
         <p class="account-error" id="loginError" style="display:none"></p>
         <button type="submit" class="btn-primary" style="width:100%;margin-top:10px">Entrar</button>
       </form>
@@ -55,10 +55,11 @@
         <select id="regFamilia" class="select-input" required>
           <option value="">— Selecciona tu familia —</option>
         </select>
-        <label>Correo</label>
-        <input type="email" id="regEmail" class="input-inline" required />
+        <label>Usuario</label>
+        <input type="text" id="regUsername" class="input-inline" autocapitalize="none" autocomplete="username" minlength="3" required />
+        <p class="account-hint">Solo letras, números, puntos y guiones. Mínimo 3 caracteres.</p>
         <label>Contraseña</label>
-        <input type="password" id="regPassword" class="input-inline" minlength="6" required />
+        <input type="password" id="regPassword" class="input-inline" minlength="6" autocomplete="new-password" required />
         <p class="account-hint">Mínimo 6 caracteres.</p>
         <p class="account-error" id="registerError" style="display:none"></p>
         <button type="submit" class="btn-primary" style="width:100%;margin-top:10px">Crear cuenta</button>
@@ -67,18 +68,10 @@
 
     <!-- ═══ LOGGED IN: estado de la cuenta ═══ -->
     <div id="accountStatus" style="display:none">
-      <div id="statusVerify" class="status-card" style="display:none">
-        <h3>📧 Verifica tu correo</h3>
-        <p>Te enviamos un correo de verificación. Haz clic en el enlace y luego presiona el botón de abajo.</p>
-        <button class="btn-primary" id="btnResendVerify">Reenviar correo</button>
-        <button class="btn-secondary" id="btnCheckVerify" style="margin-top:8px">Ya verifiqué mi correo</button>
-        <p class="account-msg" id="verifyMsg"></p>
-      </div>
-
       <div id="statusPending" class="status-card" style="display:none">
-        <h3>⏳ Pendiente de aprobación</h3>
+        <h3>⏳ Pendiente de aprobación de Rodolfo</h3>
         <p>Hola <strong id="pendingNombre"></strong>, tu cuenta de la familia <strong id="pendingFamilia"></strong> está
-           esperando que un administrador la apruebe. Te avisaremos por correo cuando esté lista.</p>
+           pendiente de aprobación de Rodolfo. Vuelve a revisar aquí más tarde.</p>
       </div>
 
       <div id="statusRejected" class="status-card" style="display:none">

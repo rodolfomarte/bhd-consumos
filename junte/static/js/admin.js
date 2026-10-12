@@ -1,18 +1,25 @@
 /* ════════════════════════════════════════════════════════════════════════
-   admin.js — panel de aprobación de usuarios y toggle de galería general.
-   La protección real vive en firestore.rules; esto es solo la UI.
+   admin.js — login directo, pestañas de usuarios, toggle de galería y
+   contador de almacenamiento. La protección real vive en firestore.rules /
+   storage.rules / las funciones de servidor — esto es solo la UI.
    ════════════════════════════════════════════════════════════════════════ */
 let usersUnsub = null;
 let storagePollTimer = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  initLoginForm();
+  initTabs();
+
   JunteAuth.subscribe(state => {
     document.getElementById("adminLoading").style.display = state.loading ? "block" : "none";
     if (state.loading) return;
 
+    const loggedOut  = !state.user;
     const authorized = state.isAdmin;
-    document.getElementById("adminDenied").style.display  = authorized ? "none" : "block";
-    document.getElementById("adminContent").style.display = authorized ? "block" : "none";
+
+    document.getElementById("adminLoginWrap").style.display = loggedOut ? "block" : "none";
+    document.getElementById("adminDenied").style.display    = (!loggedOut && !authorized) ? "block" : "none";
+    document.getElementById("adminContent").style.display   = authorized ? "block" : "none";
 
     if (authorized && !usersUnsub) {
       initGalleryToggle();
@@ -24,7 +31,41 @@ document.addEventListener("DOMContentLoaded", () => {
       if (storagePollTimer) { clearInterval(storagePollTimer); storagePollTimer = null; }
     }
   });
+
+  document.getElementById("btnAdminDeniedLogout").addEventListener("click", () => JunteAuth.logoutAccount());
 });
+
+/* ══════════════════ LOGIN DIRECTO EN /admin ═══════════════════════════════ */
+function initLoginForm() {
+  document.getElementById("adminLoginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const err = document.getElementById("adminLoginError");
+    err.style.display = "none";
+    try {
+      await JunteAuth.loginAccount({
+        username: document.getElementById("adminLoginUsername").value,
+        password: document.getElementById("adminLoginPassword").value,
+      });
+      // JunteAuth.subscribe ya reacciona solo: si es admin, muestra el panel;
+      // si no, cae en "acceso restringido" — no hace falta redirigir a mano.
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.style.display = "block";
+    }
+  });
+}
+
+/* ══════════════════ PESTAÑAS ══════════════════════════════════════════════ */
+function initTabs() {
+  document.querySelectorAll(".admin-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".admin-tab").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".admin-tab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`tabPanel-${btn.dataset.tab}`).classList.add("active");
+    });
+  });
+}
 
 /* ══════════════════ CONTADOR DE ALMACENAMIENTO ═══════════════════════════ */
 function initStorageWidget() {
@@ -63,6 +104,7 @@ async function loadStorageUsage() {
   }
 }
 
+/* ══════════════════ GALERÍA GENERAL ═══════════════════════════════════════ */
 function initGalleryToggle() {
   const toggle = document.getElementById("galleryToggle");
   const msg    = document.getElementById("gallerySettingMsg");
@@ -84,6 +126,7 @@ function initGalleryToggle() {
   });
 }
 
+/* ══════════════════ USUARIOS (pestañas) ════════════════════════════════════ */
 function watchUsers() {
   usersUnsub = fbDb.collection("users").orderBy("createdAt", "desc").onSnapshot(
     snap => {
@@ -100,7 +143,7 @@ function watchUsers() {
 
 function renderGroup(status, list) {
   const cap = status.charAt(0).toUpperCase() + status.slice(1);
-  document.getElementById(`count${cap}`).textContent = list.length;
+  document.getElementById(`tabCount${cap}`).textContent = list.length;
   const wrap = document.getElementById(`list${cap}`);
 
   if (!list.length) {
@@ -147,28 +190,11 @@ async function handleAction(action, uid, btn) {
   const original = btn.textContent;
   btn.textContent = "…";
   try {
-    await setUserStatus(uid, ACTION_STATUS[action]);
+    await JunteAuth.callFunction("set-user-status", { method: "POST", body: { uid, status: ACTION_STATUS[action] } });
   } catch (err) {
     alert("Error: " + err.message);
     btn.disabled = false;
     btn.textContent = original;
-  }
-}
-
-async function setUserStatus(uid, status) {
-  const idToken = await fbAuth.currentUser.getIdToken();
-  const res = await fetch("/.netlify/functions/set-user-status", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-    body: JSON.stringify({ uid, status }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "No se pudo actualizar el estado.");
-  if (data.emailSent === false) {
-    alert(
-      "Estado actualizado, pero el correo de notificación falló:\n" + data.emailError +
-      "\n\n(Probablemente faltan las variables de entorno de Resend en Netlify.)"
-    );
   }
 }
 
