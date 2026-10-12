@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   Junté Familiar CND 2026 — live.js  v3 (Firebase Auth + Firestore + Storage)
+   Junte Familiar CND 2026 — live.js  v3 (Firebase Auth + Firestore + Storage)
    Fotos compartidas en tiempo real, con acceso por familia aprobada.
    ════════════════════════════════════════════════════════════════════════ */
 
@@ -130,13 +130,13 @@ function renderLiveGate() {
   if (unlocked) return;
 
   if (!authState.user) {
-    wrap.innerHTML = gateHtml("👪 Inicia sesión para ver Junté en Vivo", "El feed en vivo es solo para familias registradas y aprobadas.");
+    wrap.innerHTML = gateHtml("👪 Inicia sesión para ver Junte en Vivo", "El feed en vivo es solo para familias registradas y aprobadas.");
   } else if (authState.profile?.status === "pending") {
     wrap.innerHTML = gateHtml("⏳ Pendiente de aprobación de Rodolfo", "Tu cuenta está esperando revisión. Te avisaremos cuando esté lista.");
   } else if (authState.profile?.status === "rejected") {
-    wrap.innerHTML = gateHtml("❌ Solicitud rechazada", "Contacta al administrador del Junté si crees que es un error.", true);
+    wrap.innerHTML = gateHtml("❌ Solicitud rechazada", "Contacta al administrador del Junte si crees que es un error.", true);
   } else if (authState.profile?.status === "suspended") {
-    wrap.innerHTML = gateHtml("🚫 Cuenta suspendida", "Tu acceso fue suspendido. Contacta al administrador del Junté.", true);
+    wrap.innerHTML = gateHtml("🚫 Cuenta suspendida", "Tu acceso fue suspendido. Contacta al administrador del Junte.", true);
   } else {
     wrap.innerHTML = gateHtml("👪 Feed exclusivo para familias", "Inicia sesión con tu cuenta aprobada para continuar.");
   }

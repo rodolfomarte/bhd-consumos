@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Junté Familiar CND 2026 – Rancho Las Guazaras</title>
+  <title>Junte Familiar CND 2026 – Rancho Las Guazaras</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="static/css/style.css" />
@@ -22,19 +22,19 @@
   <div class="nav-brand">
     <span class="nav-logo-text">CND</span>
     <span class="nav-divider">|</span>
-    <span class="nav-title">Junté Familiar 2026</span>
+    <span class="nav-title">Junte Familiar 2026</span>
   </div>
   <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
   <ul class="nav-links" id="navLinks">
     <li><a href="#portada">Inicio</a></li>
     <li><a href="#mural">Mural</a></li>
     <li><a href="/live">📸 Live</a></li>
-    <li><a href="#itinerario">Itinerario</a></li>
-    <li><a href="#villas">Villas</a></li>
-    <li><a href="#mapa">🗺️ Mapa</a></li>
-    <li><a href="#menu">Menú</a></li>
+    <li data-gated="true" style="display:none"><a href="#itinerario">Itinerario</a></li>
+    <li data-gated="true" style="display:none"><a href="#villas">Villas</a></li>
+    <li data-gated="true" style="display:none"><a href="#mapa">🗺️ Mapa</a></li>
+    <li data-gated="true" style="display:none"><a href="#menu">Menú</a></li>
     <li><a href="/retos">🏆 Retos</a></li>
-    <li><a href="#historia">Historia</a></li>
+    <li data-gated="true" style="display:none"><a href="#historia">Historia</a></li>
     <li><a href="/cuenta">👤 Mi Cuenta</a></li>
     <li id="navAdminLink" style="display:none"><a href="/admin">🔐 Administrador</a></li>
   </ul>
@@ -43,12 +43,12 @@
 <!-- ═══ PORTADA HERO ══════════════════════════════════════════════════════ -->
 <section id="portada" class="hero">
   <div class="hero-img-wrap">
-    <img src="static/img/flyer.png" alt="Junté Familiar CND 2026" class="hero-flyer" />
+    <img src="static/img/flyer.png" alt="Junte Familiar CND 2026" class="hero-flyer" />
     <div class="hero-overlay"></div>
   </div>
   <div class="hero-content fade-in">
     <div class="hero-badge">Logística CND</div>
-    <h1 class="hero-title">JUNTÉ <span class="gold">FAMILIAR</span></h1>
+    <h1 class="hero-title">JUNTE <span class="gold">FAMILIAR</span></h1>
     <p class="hero-date">16 de Octubre 2026</p>
     <p class="hero-lugar">Rancho Las Guazaras · Jarabacoa</p>
     <div class="countdown" id="countdown">
@@ -112,7 +112,7 @@
       <label>Foto</label>
       <label class="file-label" for="photoFileInput">
         📁 Elegir imagen
-        <input type="file" id="photoFileInput" accept="image/*" capture="environment" hidden />
+        <input type="file" id="photoFileInput" accept="image/*" hidden />
       </label>
       <img id="uploadImgPreview" src="" alt="Vista previa" style="display:none" class="upload-preview-img" />
       <label>Descripción (opcional)</label>
@@ -160,8 +160,22 @@
   </div>
 </div>
 
+<!-- ═══ ACCESO AL RESTO DEL SITIO ════════════════════════════════════════
+     El itinerario, las villas, el mapa, el menú y la historia son solo
+     para quien tiene cuenta (no hace falta esperar aprobación, solo
+     registrarse) — por defecto esas secciones están display:none en el
+     HTML y main.js las revela si hay sesión, así nunca hay un parpadeo
+     mostrando contenido antes de confirmar. -->
+<div id="loggedOutGateWrap" class="section" style="display:none">
+  <div class="auth-gate-banner" style="max-width:640px;margin:0 auto">
+    <h3>🔒 Regístrate para ver el resto del sitio</h3>
+    <p>El itinerario, las villas, el mapa, el menú y la historia son solo para familias registradas. Crea tu cuenta o inicia sesión para continuar — no hace falta esperar aprobación para verlos.</p>
+    <a href="/cuenta" class="btn-primary" style="text-decoration:none;display:inline-block">Ir a Mi Cuenta</a>
+  </div>
+</div>
+
 <!-- ═══ ITINERARIO (estático, sin JS de render — solo pestañas por click) ═ -->
-<section id="itinerario" class="section itinerario-section">
+<section id="itinerario" class="section itinerario-section" style="display:none">
   <div class="section-header">
     <h2 class="section-title">Itinerario</h2>
     <p class="section-sub">Tres días llenos de familia, diversión y recuerdos</p>
@@ -207,7 +221,7 @@
 </section>
 
 <!-- ═══ VILLAS / FAMILIAS POR VILLA (estático, sin JS) ═══════════════════ -->
-<section id="villas" class="villas-section">
+<section id="villas" class="villas-section" style="display:none">
   <div class="section-header">
     <h2 class="section-title">Nuestras Villas</h2>
     <p class="section-sub">Rancho Las Guazaras · Tu hogar por el fin de semana</p>
@@ -277,7 +291,7 @@
 </section>
 
 <!-- ═══ MAPA ══════════════════════════════════════════════════════════════ -->
-<section id="mapa" class="mapa-section section">
+<section id="mapa" class="mapa-section section" style="display:none">
   <div class="section-header">
     <h2 class="section-title editable" data-key="mapa-titulo">Mapa del Rancho</h2>
     <p class="section-sub editable" data-key="mapa-sub">Rancho Las Guazaras · Jarabacoa — Encuentra tu villa</p>
@@ -336,7 +350,7 @@
 </div>
 
 <!-- ═══ MENÚ (estático, sin JS de render — solo pestañas por click) ═══════ -->
-<section id="menu" class="section menu-section">
+<section id="menu" class="section menu-section" style="display:none">
   <div class="section-header">
     <h2 class="section-title">Menú del Junte</h2>
     <p class="section-sub">Sabor dominicano para toda la familia</p>
@@ -461,7 +475,7 @@
 </section>
 
 <!-- ═══ HISTORIA ══════════════════════════════════════════════════════════ -->
-<section id="historia" class="historia-section">
+<section id="historia" class="historia-section" style="display:none">
   <div class="historia-bg-overlay"></div>
   <div class="historia-content">
     <div class="section-header">
@@ -470,14 +484,14 @@
     </div>
     <div class="historia-text">
       <p class="editable" data-key="hist-p1">Logística CND nació del sueño de brindarle soluciones logísticas al mercado dominicano. Pero más allá de los camiones y las rutas, lo que realmente nos mueve es nuestra gente — la familia CND.</p>
-      <p class="editable" data-key="hist-p2">El Junté Familiar es nuestra celebración anual donde dejamos el trabajo atrás y nos encontramos como lo que somos: una familia. Este año, en el Rancho Las Guazaras de Jarabacoa, vivimos tres días que quedarán grabados en el corazón de todos.</p>
+      <p class="editable" data-key="hist-p2">El Junte Familiar es nuestra celebración anual donde dejamos el trabajo atrás y nos encontramos como lo que somos: una familia. Este año, en el Rancho Las Guazaras de Jarabacoa, vivimos tres días que quedarán grabados en el corazón de todos.</p>
       <p class="editable" data-key="hist-p3">Tres días para compartir, reír y fortalecer lo más importante: <strong>Nuestra Familia.</strong></p>
     </div>
     <div class="historia-stats">
       <div class="stat-box"><span class="stat-num editable" data-key="stat-familias">5</span><span class="stat-label">Villas</span></div>
       <div class="stat-box"><span class="stat-num editable" data-key="stat-personas">70+</span><span class="stat-label">Personas</span></div>
       <div class="stat-box"><span class="stat-num editable" data-key="stat-dias">3</span><span class="stat-label">Días</span></div>
-      <div class="stat-box"><span class="stat-num editable" data-key="stat-anos">7mo</span><span class="stat-label">Junté</span></div>
+      <div class="stat-box"><span class="stat-num editable" data-key="stat-anos">7mo</span><span class="stat-label">Junte</span></div>
     </div>
   </div>
 </section>
@@ -485,7 +499,7 @@
 <!-- ═══ FOOTER ════════════════════════════════════════════════════════════ -->
 <footer class="site-footer">
   <div class="footer-inner">
-    <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junté Familiar 2026</p>
+    <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junte Familiar 2026</p>
     <p class="footer-lugar">📍 Rancho Las Guazaras, Jarabacoa</p>
     <p class="footer-fecha">16 de Octubre 2026</p>
     <p class="footer-copy editable" data-key="footer-copy">Hecho con ❤️ por la familia CND</p>

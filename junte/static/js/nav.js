@@ -58,14 +58,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // El enlace "Administrador" solo aparece si la sesión activa tiene el
   // custom claim admin — el panel /admin igual exige login ahí mismo,
   // esto es solo para no mostrar el enlace a quien no lo necesita.
+  // Los enlaces [data-gated] (Itinerario/Villas/Mapa/Menú/Historia) llevan
+  // a secciones que en index.html están display:none hasta que hay cuenta
+  // — se ocultan también aquí para no dejar enlaces que no llevan a nada.
   try {
     if (typeof JunteAuth !== "undefined") {
       JunteAuth.subscribe(state => {
         const adminLink = document.getElementById("navAdminLink");
         if (adminLink) adminLink.style.display = state.isAdmin ? "" : "none";
+        const authed = !!state.user;
+        document.querySelectorAll('#navLinks [data-gated="true"]').forEach(li => {
+          li.style.display = authed ? "" : "none";
+        });
       });
     }
   } catch (err) {
-    console.error("Error iniciando enlace de admin en nav:", err);
+    console.error("Error iniciando enlaces condicionales en nav:", err);
   }
 });

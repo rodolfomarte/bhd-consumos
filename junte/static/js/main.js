@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   Junté Familiar CND 2026 — main.js  v4
+   Junte Familiar CND 2026 — main.js  v4
    Itinerario/Villas/Menú son HTML estático (ver index.html) — nada de eso
    se renderiza desde aquí. Este archivo solo maneja: el Mural de Recuerdos
    (Firestore + Storage, control de acceso por familia) y el modo admin
@@ -48,9 +48,24 @@ function onAuthState(state) {
     document.querySelectorAll(".editable").forEach(el => el.contentEditable = adminMode ? "true" : "false");
   } catch (err) { console.error("Error en onAuthState (admin UI):", err); }
 
-  for (const fn of [watchSettings, watchMural, renderMuralGate, renderMuralGrid]) {
+  for (const fn of [watchSettings, watchMural, renderMuralGate, renderMuralGrid, renderLoggedOutGate]) {
     try { fn(); } catch (err) { console.error(`Error en onAuthState (${fn.name}):`, err); }
   }
+}
+
+/* ══════════════════ ACCESO AL RESTO DEL SITIO ═══════════════════════════
+   Itinerario/Villas/Mapa/Menú/Historia empiezan display:none en el HTML
+   (nunca hay parpadeo mostrando contenido antes de confirmar sesión) y
+   esto las revela en cuanto hay una cuenta — no hace falta estar aprobado,
+   solo registrado. Mural/Live siguen pidiendo aprobación aparte. */
+function renderLoggedOutGate() {
+  const authed = !!authState.user;
+  const gate = document.getElementById("loggedOutGateWrap");
+  if (gate) gate.style.display = authed ? "none" : "block";
+  ["itinerario", "villas", "mapa", "menu", "historia"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = authed ? "" : "none";
+  });
 }
 
 /* ══════════════════ HELPERS ════════════════════════════════════════════ */
@@ -167,9 +182,9 @@ function renderMuralGate() {
   } else if (authState.profile?.status === "pending") {
     wrap.innerHTML = gateHtml("⏳ Pendiente de aprobación de Rodolfo", "Tu cuenta está esperando revisión. Te avisaremos cuando esté lista.");
   } else if (authState.profile?.status === "rejected") {
-    wrap.innerHTML = gateHtml("❌ Solicitud rechazada", "Contacta al administrador del Junté si crees que es un error.", true);
+    wrap.innerHTML = gateHtml("❌ Solicitud rechazada", "Contacta al administrador del Junte si crees que es un error.", true);
   } else if (authState.profile?.status === "suspended") {
-    wrap.innerHTML = gateHtml("🚫 Cuenta suspendida", "Tu acceso fue suspendido. Contacta al administrador del Junté.", true);
+    wrap.innerHTML = gateHtml("🚫 Cuenta suspendida", "Tu acceso fue suspendido. Contacta al administrador del Junte.", true);
   } else {
     wrap.innerHTML = gateHtml("👪 Mural exclusivo para familias", "Inicia sesión con tu cuenta aprobada para continuar.");
   }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel Admin · Junté Familiar CND 2026</title>
+  <title>Panel Admin · Junte Familiar CND 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="static/css/style.css" />
@@ -15,7 +15,7 @@
     <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
       <span class="nav-logo-text">CND</span>
       <span class="nav-divider">|</span>
-      <span class="nav-title">Junté Familiar 2026</span>
+      <span class="nav-title">Junte Familiar 2026</span>
     </a>
   </div>
   <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
@@ -23,12 +23,12 @@
     <li><a href="/">Inicio</a></li>
     <li><a href="/#mural">Mural</a></li>
     <li><a href="/live">📸 Live</a></li>
-    <li><a href="/#itinerario">Itinerario</a></li>
-    <li><a href="/#villas">Villas</a></li>
-    <li><a href="/#mapa">🗺️ Mapa</a></li>
-    <li><a href="/#menu">Menú</a></li>
+    <li data-gated="true" style="display:none"><a href="/#itinerario">Itinerario</a></li>
+    <li data-gated="true" style="display:none"><a href="/#villas">Villas</a></li>
+    <li data-gated="true" style="display:none"><a href="/#mapa">🗺️ Mapa</a></li>
+    <li data-gated="true" style="display:none"><a href="/#menu">Menú</a></li>
     <li><a href="/retos">🏆 Retos</a></li>
-    <li><a href="/#historia">Historia</a></li>
+    <li data-gated="true" style="display:none"><a href="/#historia">Historia</a></li>
     <li><a href="/cuenta">👤 Mi Cuenta</a></li>
     <li id="navAdminLink" style="display:none"><a href="/admin" class="active-nav">🔐 Administrador</a></li>
   </ul>
