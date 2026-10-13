@@ -46,13 +46,28 @@ service firebase.storage {
       allow read: if isAdmin() || isApproved();
       allow write: if isAdmin()
         || (isApproved() && familia == myFamilia() && isImage());
+      // Borrado real del archivo: admin, o cualquier aprobado de esa misma
+      // familia (no solo quien lo subió) — antes solo el admin podía borrar
+      // el archivo aunque el documento de Firestore sí se pudiera borrar.
+      allow delete: if isAdmin() || (isApproved() && familia == myFamilia());
     }
 
-    // live/<photoId>  (one object per shared "live" photo)
+    // live/<photoId>  (legacy, sin familia en la ruta — fotos subidas antes
+    // del 2026-10-13). Se deja solo para que el admin pueda seguir
+    // gestionando esos archivos viejos; las fotos nuevas usan la ruta con
+    // familia de abajo, que sí permite borrado por familia.
     match /live/{photoId} {
       allow read: if isAdmin() || isApproved();
-      allow write: if isAdmin() || (isApproved() && isImage());
       allow delete: if isAdmin();
+    }
+
+    // live/<familia>/<photoId>  (esquema actual — misma familia que
+    // mural/<familia>/<anio>, así que cualquier aprobado de esa familia
+    // puede borrar su propia foto, no solo quien la subió).
+    match /live/{familia}/{photoId} {
+      allow read: if isAdmin() || isApproved();
+      allow write: if isAdmin() || (isApproved() && familia == myFamilia() && isImage());
+      allow delete: if isAdmin() || (isApproved() && familia == myFamilia());
     }
 
     // retos/<villa>/<retoId>/<fileName>  (evidence the villa's captain submits)

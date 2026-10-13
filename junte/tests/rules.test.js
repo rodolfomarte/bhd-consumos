@@ -166,6 +166,45 @@ test("aprobada: SÍ puede leer fotos de otra familia si el admin habilitó la ga
   await assertSucceeds(alice.firestore().collection("muralPhotos").doc("gomez_2025").get());
 });
 
+test("muralPhotos: un aprobado de la MISMA familia puede borrar, aunque no haya sido quien subió la foto", async () => {
+  await seedUser("bob", { nombre: "Bob", familia: "perez", familiaLabel: "Pérez", email: "bob@test.com", status: "approved" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@test.com" });
+  await assertSucceeds(bob.firestore().collection("muralPhotos").doc("perez_2025").delete());
+});
+
+test("muralPhotos: un aprobado de OTRA familia NO puede borrar (de verdad, no solo CSS)", async () => {
+  await seedUser("carol", { nombre: "Carol", familia: "gomez", familiaLabel: "Gómez", email: "carol@test.com", status: "approved" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+  const carol = testEnv.authenticatedContext("carol", { email: "carol@test.com" });
+  await assertFails(carol.firestore().collection("muralPhotos").doc("perez_2025").delete());
+});
+
+test("muralPhotos: una cuenta pendiente de la misma familia NO puede borrar", async () => {
+  await seedUser("dave", { nombre: "Dave", familia: "perez", familiaLabel: "Pérez", email: "dave@test.com", status: "pending" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+  const dave = testEnv.authenticatedContext("dave", { email: "dave@test.com" });
+  await assertFails(dave.firestore().collection("muralPhotos").doc("perez_2025").delete());
+});
+
+test("livePhotos: un aprobado de la MISMA familia puede borrar, aunque no haya sido quien subió la foto", async () => {
+  await seedUser("bob", { nombre: "Bob", familia: "perez", familiaLabel: "Pérez", email: "bob@test.com", status: "approved" });
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("livePhotos").doc("live1").set({ familia: "perez", familiaLabel: "Pérez", uploaderUid: "alice", likes: [], comments: [] });
+  });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@test.com" });
+  await assertSucceeds(bob.firestore().collection("livePhotos").doc("live1").delete());
+});
+
+test("livePhotos: un aprobado de OTRA familia NO puede borrar", async () => {
+  await seedUser("carol", { nombre: "Carol", familia: "gomez", familiaLabel: "Gómez", email: "carol@test.com", status: "approved" });
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection("livePhotos").doc("live1").set({ familia: "perez", familiaLabel: "Pérez", uploaderUid: "alice", likes: [], comments: [] });
+  });
+  const carol = testEnv.authenticatedContext("carol", { email: "carol@test.com" });
+  await assertFails(carol.firestore().collection("livePhotos").doc("live1").delete());
+});
+
 test("suspendida: pierde el acceso aunque antes estuviera aprobada", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "suspended" });
   await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });

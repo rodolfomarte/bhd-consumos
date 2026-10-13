@@ -81,7 +81,7 @@ test("admin: puede subir foto a la carpeta de CUALQUIER familia", async () => {
   await assertSucceeds(admin.storage().ref("mural/perez/2025").put(PNG_BYTES, png));
 });
 
-test("solo admin puede borrar fotos del feed Live en Storage", async () => {
+test("live/<id> (ruta vieja, sin familia): solo admin puede borrar", async () => {
   await testEnv.withSecurityRulesDisabled(async (ctx) => {
     await ctx.storage().ref("live/abc123").put(PNG_BYTES, png);
     await ctx.storage().ref("live/xyz789").put(PNG_BYTES, png);
@@ -94,6 +94,38 @@ test("solo admin puede borrar fotos del feed Live en Storage", async () => {
 
   const admin = testEnv.authenticatedContext("admin1", { email: "admin@junte.internal", admin: true });
   await assertSucceeds(admin.storage().ref("live/xyz789").delete());
+});
+
+test("mural: un aprobado de la MISMA familia puede borrar, aunque no haya sido quien subió", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.storage().ref("mural/perez/2025").put(PNG_BYTES, png);
+  });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@junte.internal", approved: true, familia: "perez" });
+  await assertSucceeds(bob.storage().ref("mural/perez/2025").delete());
+});
+
+test("mural: un aprobado de OTRA familia NO puede borrar", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.storage().ref("mural/perez/2025").put(PNG_BYTES, png);
+  });
+  const carol = testEnv.authenticatedContext("carol", { email: "carol@junte.internal", approved: true, familia: "gomez" });
+  await assertFails(carol.storage().ref("mural/perez/2025").delete());
+});
+
+test("live/<familia>/<id> (ruta nueva): un aprobado de la MISMA familia puede subir y borrar", async () => {
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@junte.internal", approved: true, familia: "perez" });
+  await assertSucceeds(alice.storage().ref("live/perez/abc123").put(PNG_BYTES, png));
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@junte.internal", approved: true, familia: "perez" });
+  await assertSucceeds(bob.storage().ref("live/perez/abc123").delete());
+});
+
+test("live/<familia>/<id> (ruta nueva): un aprobado de OTRA familia NO puede borrar ni subir ahí", async () => {
+  const carol = testEnv.authenticatedContext("carol", { email: "carol@junte.internal", approved: true, familia: "gomez" });
+  await assertFails(carol.storage().ref("live/perez/abc123").put(PNG_BYTES, png));
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.storage().ref("live/perez/abc123").put(PNG_BYTES, png);
+  });
+  await assertFails(carol.storage().ref("live/perez/abc123").delete());
 });
 
 test("retos: el capitán de la villa SÍ puede subir evidencia a SU villa", async () => {

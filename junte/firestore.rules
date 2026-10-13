@@ -102,7 +102,9 @@ service cloud.firestore {
             && (resource.data.familia == myFamilia() || galleryEnabled())
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','comments']));
 
-      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.uploaderUid);
+      // Cualquier aprobado de esa misma familia puede borrar la foto (no
+      // solo quien la subió) — el admin siempre puede, de cualquier familia.
+      allow delete: if isAdmin() || (isApproved() && resource.data.familia == myFamilia());
     }
 
     /* ───────────── livePhotos/{photoId} ───────────── */
@@ -119,7 +121,9 @@ service cloud.firestore {
             && (resource.data.familia == myFamilia() || galleryEnabled())
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','comments']));
 
-      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.uploaderUid);
+      // Cualquier aprobado de esa misma familia puede borrar la foto (no
+      // solo quien la subió) — el admin siempre puede, de cualquier familia.
+      allow delete: if isAdmin() || (isApproved() && resource.data.familia == myFamilia());
     }
 
     /* ───────────── liveActivities/{id} ─────────────

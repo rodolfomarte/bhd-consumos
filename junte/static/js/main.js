@@ -475,6 +475,10 @@ function openPhotoModal(key) {
   renderLikes();
   renderComments();
   document.getElementById("commentTexto").value  = "";
+
+  const del = document.getElementById("muralPhotoDelete");
+  if (del) del.style.display = canDeleteMuralPhoto(photo) ? "block" : "none";
+
   document.getElementById("photoModal").classList.add("open");
   document.body.style.overflow = "hidden";
 }
@@ -483,6 +487,29 @@ function closePhotoModal() {
   document.getElementById("photoModal").classList.remove("open");
   document.body.style.overflow = "";
 }
+
+// Admin, o cualquier aprobado de esa misma familia (no solo quien subió la
+// foto) — la regla de verdad vive en firestore.rules/storage.rules, esto
+// solo decide si se muestra el botón.
+function canDeleteMuralPhoto(photo) {
+  return authState.isAdmin || (authState.isApproved && photo.familia === myFamiliaSlug());
+}
+
+async function deleteMuralPhoto() {
+  const key = currentModalKey;
+  const photo = muralCache[key];
+  if (!photo || !canDeleteMuralPhoto(photo)) return;
+  if (!confirm("¿Eliminar esta foto?")) return;
+  try {
+    await fbDb.collection("muralPhotos").doc(key).delete();
+    try { await fbStorage.ref(`mural/${photo.familia}/${photo.anio}`).delete(); } catch {}
+    closePhotoModal();
+  } catch (err) {
+    console.error("Error al eliminar foto del Mural:", err);
+    alert("Error al eliminar: " + err.message);
+  }
+}
+window.deleteMuralPhoto = deleteMuralPhoto;
 
 function renderLikes() {
   const photo = muralCache[currentModalKey];

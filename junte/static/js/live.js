@@ -253,7 +253,7 @@ function renderCard(photo) {
       <div class="live-card-img-wrap">
         <img src="${photo.url}" alt="${escHtml(photo.familiaLabel)}" loading="lazy" />
         <div class="live-card-act-badge">${act.icon} ${escHtml(act.label)}</div>
-        ${authState.isAdmin
+        ${canDeletePhoto(photo)
           ? `<button class="live-card-delete"
                onclick="event.stopPropagation();quickDeletePhoto('${photo.id}')"
                title="Eliminar">🗑️</button>`
@@ -358,7 +358,7 @@ async function doLiveUpload() {
     // "approved" podría no haber llegado aún al token en caché.
     await authState.user.getIdToken(true);
     const id = genId();
-    const storageRef = fbStorage.ref(`live/${id}`);
+    const storageRef = fbStorage.ref(`live/${myFamiliaSlug()}/${id}`);
     await storageRef.put(liveFile, { contentType: liveFile.type });
     const url = await storageRef.getDownloadURL();
 
@@ -413,7 +413,7 @@ function openLivePhotoModal(id) {
   document.getElementById("liveCommentTexto").value  = "";
 
   const del = document.getElementById("liveAdminDelete");
-  if (del) del.style.display = authState.isAdmin ? "block" : "none";
+  if (del) del.style.display = canDeletePhoto(photo) ? "block" : "none";
 
   document.getElementById("livePhotoModal").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -525,11 +525,21 @@ async function removeActivity(id) {
   } catch (err) { alert("Error: " + err.message); }
 }
 
+function canDeletePhoto(photo) {
+  return authState.isAdmin || (authState.isApproved && photo.familia === myFamiliaSlug());
+}
+
 async function quickDeletePhoto(id) {
+  const photo = photos.find(p => p.id === id);
+  if (!photo || !canDeletePhoto(photo)) return;
   if (!confirm("¿Eliminar esta foto?")) return;
   try {
     await fbDb.collection("livePhotos").doc(id).delete();
-    try { await fbStorage.ref(`live/${id}`).delete(); } catch {}
+    // Las fotos nuevas viven en live/<familia>/<id>; las de antes del
+    // 2026-10-13 en live/<id> (sin familia) — se intenta la ruta nueva y,
+    // si no existe ahí, la vieja, sin romper nada si ninguna aplica.
+    try { await fbStorage.ref(`live/${photo.familia}/${id}`).delete(); }
+    catch { try { await fbStorage.ref(`live/${id}`).delete(); } catch {} }
   } catch(err) {
     console.error("Delete error:", err);
     alert("Error al eliminar: " + err.message);
