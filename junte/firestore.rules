@@ -96,11 +96,21 @@ service cloud.firestore {
         && request.resource.data.comments == [];
 
       // Likes/comments can be added by any approved member who can read the
-      // photo; nobody may touch the immutable fields afterward.
+      // photo; nobody may touch the immutable fields afterward. Separately,
+      // anyone approved from the SAME family can replace the photo itself
+      // (url/description/uploader info) — same "slot" (familia+año), keeps
+      // whatever likes/comments it already had, never touches those in the
+      // same write, and can never change familia/anio (that would be a
+      // different slot, not a replacement of this one).
       allow update: if isAdmin()
         || (isApproved()
             && (resource.data.familia == myFamilia() || galleryEnabled())
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','comments']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes','comments']))
+        || (isApproved() && resource.data.familia == myFamilia()
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['url','description','uploaderUid','uploaderEmail','createdAt'])
+            && request.resource.data.familia == resource.data.familia
+            && request.resource.data.anio == resource.data.anio);
 
       // Cualquier aprobado de esa misma familia puede borrar la foto (no
       // solo quien la subió) — el admin siempre puede, de cualquier familia.

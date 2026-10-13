@@ -368,8 +368,9 @@ function initUploadModal() {
 }
 
 let uploadTargetSlug = null, uploadTargetLabel = null;
+let isReplacingPhoto = false;
 
-function openUploadModal(slug, label, anio) {
+function openUploadModal(slug, label, anio, replacing = false) {
   if (!authState.isAdmin && slug !== myFamiliaSlug()) {
     alert("Solo puedes subir fotos de tu propia familia.");
     return;
@@ -377,13 +378,16 @@ function openUploadModal(slug, label, anio) {
   uploadTargetSlug  = slug;
   uploadTargetLabel = label;
   uploadTargetAnio  = anio;
+  isReplacingPhoto  = replacing;
   selectedFile = null;
   const prev = document.getElementById("uploadImgPreview");
-  prev.src = ""; prev.style.display = "none";
+  const existing = replacing ? muralCache[`${slug}_${anio}`] : null;
+  prev.src = existing?.url || ""; prev.style.display = existing ? "block" : "none";
   document.getElementById("photoFileInput").value = "";
-  document.getElementById("uploadDescInput").value = "";
+  document.getElementById("uploadDescInput").value = existing?.description || "";
   document.getElementById("uploadStatusMsg").textContent = "";
   document.getElementById("uploadFamiliaLabel").textContent = label;
+  document.getElementById("uploadModalTitle").textContent = replacing ? "Sustituir foto familiar" : "Subir foto familiar";
   if (anio) document.getElementById("uploadAnioSelect").value = anio;
 
   document.getElementById("uploadModal").classList.add("open");
@@ -391,7 +395,16 @@ function openUploadModal(slug, label, anio) {
 
 function closeUploadModal() {
   document.getElementById("uploadModal").classList.remove("open");
+  isReplacingPhoto = false;
 }
+
+function replaceMuralPhoto() {
+  const photo = muralCache[currentModalKey];
+  if (!photo || !canDeleteMuralPhoto(photo)) return;
+  closePhotoModal();
+  openUploadModal(photo.familia, photo.familiaLabel, photo.anio, true);
+}
+window.replaceMuralPhoto = replaceMuralPhoto;
 
 async function doUpload() {
   const anio   = document.getElementById("uploadAnioSelect").value;
@@ -401,7 +414,7 @@ async function doUpload() {
 
   if (!selectedFile) { status.textContent = "⚠️ Selecciona una imagen."; return; }
   const key = `${uploadTargetSlug}_${anio}`;
-  if (muralCache[key]) { status.textContent = `❌ ${uploadTargetLabel} ya tiene foto de ${anio}.`; return; }
+  if (muralCache[key] && !isReplacingPhoto) { status.textContent = `❌ ${uploadTargetLabel} ya tiene foto de ${anio}.`; return; }
 
   status.textContent = "Verificando espacio disponible... ⏳";
   btn.disabled = true;
@@ -429,18 +442,30 @@ async function doUpload() {
     await ref.put(selectedFile, { contentType: selectedFile.type });
     const url = await ref.getDownloadURL();
 
-    await fbDb.collection("muralPhotos").doc(key).set({
-      familia:       uploadTargetSlug,
-      familiaLabel:  uploadTargetLabel,
-      anio,
-      url,
-      description:   desc,
-      uploaderUid:   authState.user.uid,
-      uploaderEmail: authState.user.email,
-      createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
-      likes:         [],
-      comments:      [],
-    });
+    if (isReplacingPhoto) {
+      // Misma casilla (familia+año) — conserva los likes/comentarios que
+      // ya tenía, solo cambia la imagen y la descripción.
+      await fbDb.collection("muralPhotos").doc(key).update({
+        url,
+        description:   desc,
+        uploaderUid:   authState.user.uid,
+        uploaderEmail: authState.user.email,
+        createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } else {
+      await fbDb.collection("muralPhotos").doc(key).set({
+        familia:       uploadTargetSlug,
+        familiaLabel:  uploadTargetLabel,
+        anio,
+        url,
+        description:   desc,
+        uploaderUid:   authState.user.uid,
+        uploaderEmail: authState.user.email,
+        createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
+        likes:         [],
+        comments:      [],
+      });
+    }
 
     closeUploadModal();
   } catch (err) {

@@ -205,6 +205,52 @@ test("livePhotos: un aprobado de OTRA familia NO puede borrar", async () => {
   await assertFails(carol.firestore().collection("livePhotos").doc("live1").delete());
 });
 
+test("muralPhotos: un aprobado de la MISMA familia puede sustituir la foto (url/descripción), conservando likes/comentarios", async () => {
+  await seedUser("bob", { nombre: "Bob", familia: "perez", familiaLabel: "Pérez", email: "bob@test.com", status: "approved" });
+  await seedMuralPhoto("perez_2025", {
+    familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", description: "vieja",
+    uploaderUid: "alice", uploaderEmail: "alice@test.com", createdAt: new Date(),
+    likes: [{ uid: "carol", nombre: "Carol" }], comments: [],
+  });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@test.com" });
+  await assertSucceeds(
+    bob.firestore().collection("muralPhotos").doc("perez_2025").update({
+      url: "y", description: "nueva", uploaderUid: "bob", uploaderEmail: "bob@test.com", createdAt: new Date(),
+    })
+  );
+});
+
+test("muralPhotos: un aprobado de OTRA familia NO puede sustituir la foto", async () => {
+  await seedUser("carol", { nombre: "Carol", familia: "gomez", familiaLabel: "Gómez", email: "carol@test.com", status: "approved" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+  const carol = testEnv.authenticatedContext("carol", { email: "carol@test.com" });
+  await assertFails(
+    carol.firestore().collection("muralPhotos").doc("perez_2025").update({ url: "y", uploaderUid: "carol" })
+  );
+});
+
+test("muralPhotos: sustituir la foto NO puede cambiar de familia ni de año (sería otra casilla)", async () => {
+  await seedUser("bob", { nombre: "Bob", familia: "perez", familiaLabel: "Pérez", email: "bob@test.com", status: "approved" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@test.com" });
+  const bobDb = bob.firestore();
+  await assertFails(
+    bobDb.collection("muralPhotos").doc("perez_2025").update({ url: "y", familia: "cafe" })
+  );
+  await assertFails(
+    bobDb.collection("muralPhotos").doc("perez_2025").update({ url: "y", anio: "2026" })
+  );
+});
+
+test("muralPhotos: sustituir no puede colarse y tocar likes/comments en la misma escritura", async () => {
+  await seedUser("bob", { nombre: "Bob", familia: "perez", familiaLabel: "Pérez", email: "bob@test.com", status: "approved" });
+  await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });
+  const bob = testEnv.authenticatedContext("bob", { email: "bob@test.com" });
+  await assertFails(
+    bob.firestore().collection("muralPhotos").doc("perez_2025").update({ url: "y", likes: [{ uid: "bob", nombre: "Bob" }] })
+  );
+});
+
 test("suspendida: pierde el acceso aunque antes estuviera aprobada", async () => {
   await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "suspended" });
   await seedMuralPhoto("perez_2025", { familia: "perez", familiaLabel: "Pérez", anio: "2025", url: "x", uploaderUid: "alice", likes: [], comments: [] });

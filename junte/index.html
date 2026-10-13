@@ -96,7 +96,7 @@
   <div class="overlay-modal-bg" id="uploadModalBg"></div>
   <div class="overlay-modal-box upload-box-modal">
     <button class="modal-close-x" id="btnCancelUpload">&times;</button>
-    <h3>Subir foto familiar</h3>
+    <h3 id="uploadModalTitle">Subir foto familiar</h3>
     <div class="upload-form">
       <label>Familia</label>
       <p class="upload-familia-fixed" id="uploadFamiliaLabel"></p>
@@ -141,6 +141,7 @@
         <p class="photo-desc" id="modalDesc"></p>
 
         <div class="live-admin-delete" id="muralPhotoDelete" style="display:none">
+          <button class="btn-admin-sm" onclick="replaceMuralPhoto()">🔄 Sustituir foto</button>
           <button class="btn-admin-sm danger" onclick="deleteMuralPhoto()">🗑️ Eliminar esta foto</button>
         </div>
 
