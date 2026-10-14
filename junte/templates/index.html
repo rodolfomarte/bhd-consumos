@@ -391,6 +391,7 @@
     <button class="day-tab" data-day="sabado">Sabado</button>
     <button class="day-tab" data-day="domingo">Domingo</button>
     <button class="day-tab" data-day="kit">🧺 Kit de Alimentos</button>
+    <button class="day-tab" data-day="bebidas">🍹 Bebidas del Junté</button>
   </div>
 
   <div class="menu-panel active" data-tabgroup="menu" data-panel="viernes">
@@ -509,6 +510,13 @@
     <p class="kit-alimentos-intro">Cada villa tendrá disponible este kit de alimentos para compartir durante los 3 días. Toca la imagen para verla completa.</p>
     <img id="kitAlimentosImg" class="kit-alimentos-img" src="static/img/kit-alimentos.jpg"
          alt="Kit de alimentos por villa — Junté Familiar 2026"
+         onclick="document.getElementById('villaPhotoZoomImg').src=this.src;document.getElementById('villaPhotoZoomModal').classList.add('open');document.body.style.overflow='hidden';" />
+  </div>
+
+  <div class="menu-panel kit-alimentos-panel" data-tabgroup="menu" data-panel="bebidas">
+    <p class="kit-alimentos-intro">Bebidas disponibles durante el Junté. Toca la imagen para verla completa.</p>
+    <img id="bebidasJunteImg" class="kit-alimentos-img" src="static/img/bebidas-junte.jpg"
+         alt="Bebidas del Junté — Junté Familiar 2026"
          onclick="document.getElementById('villaPhotoZoomImg').src=this.src;document.getElementById('villaPhotoZoomModal').classList.add('open');document.body.style.overflow='hidden';" />
   </div>
 </section>
