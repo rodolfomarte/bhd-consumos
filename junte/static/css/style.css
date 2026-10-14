@@ -1066,3 +1066,11 @@ body.nav-open-lock { overflow: hidden; }
   color: var(--green-dark); width: 26px; flex-shrink: 0; text-align: center;
 }
 .roadmap-title { flex: 1; font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); font-size: .92rem; }
+
+/* ─── Menú: Kit de Alimentos por Villa ───────────────────────────────────── */
+.kit-alimentos-panel { max-width: 800px; margin: 0 auto; text-align: center; }
+.kit-alimentos-intro { color: var(--text-mid); font-size: .92rem; margin-bottom: 16px; }
+.kit-alimentos-img {
+  width: 100%; height: auto; display: block; border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); cursor: zoom-in;
+}
