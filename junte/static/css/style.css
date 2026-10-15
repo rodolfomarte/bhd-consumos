@@ -1093,3 +1093,19 @@ body.nav-open-lock {
 }
 .year-summary-year { font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--green-dark); font-size: 1rem; }
 .year-summary-count { font-size: .78rem; color: var(--text-mid); margin-top: 2px; }
+.year-summary-item { cursor: pointer; transition: var(--transition); }
+.year-summary-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+/* ─── Mural: galería por año ──────────────────────────────────────────────── */
+.year-gallery-box { width: min(700px, 95vw); padding: 28px 24px; }
+.year-gallery-box h3 { color: var(--green-dark); margin-bottom: 18px; font-size: 1.2rem; }
+.year-gallery-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 14px;
+}
+.year-gallery-item { cursor: pointer; text-align: center; }
+.year-gallery-item img {
+  width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); transition: var(--transition);
+}
+.year-gallery-item:hover img { transform: scale(1.04); }
+.year-gallery-item span { display: block; font-size: .78rem; color: var(--text-mid); margin-top: 6px; }

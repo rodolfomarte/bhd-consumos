@@ -340,7 +340,7 @@ function renderMuralGrid() {
       <h3>📊 Resumen por año</h3>
       <div class="mural-year-summary-list">
         ${countsByYear.map(({ anio, count }) => `
-          <div class="year-summary-item">
+          <div class="year-summary-item" onclick="openYearGallery('${anio}')">
             <span class="year-summary-year">${anio}</span>
             <span class="year-summary-count">${count} foto${count === 1 ? "" : "s"}</span>
           </div>`).join("")}
@@ -503,7 +503,40 @@ function initPhotoModal() {
   document.getElementById("photoModalClose").addEventListener("click", closePhotoModal);
   document.getElementById("btnLike").addEventListener("click", doLike);
   document.getElementById("btnComment").addEventListener("click", doComment);
+
+  document.getElementById("yearGalleryModalBg").addEventListener("click", closeYearGallery);
+  document.getElementById("yearGalleryClose").addEventListener("click", closeYearGallery);
 }
+
+// Al tocar un año en el "Resumen por año" — muestra todas las fotos de ese
+// año en una galería; tocar una foto lleva al modal de siempre (likes y
+// comentarios). Respeta lo mismo que ya se ve en la cuadrícula (muralCache
+// ya viene filtrado a lo que el usuario actual puede ver).
+function openYearGallery(anio) {
+  const items = Object.entries(muralCache)
+    .filter(([, p]) => p.anio === anio)
+    .map(([key, p]) => ({ key, ...p }));
+
+  document.getElementById("yearGalleryTitle").textContent = `📅 Fotos de ${anio}`;
+  const grid = document.getElementById("yearGalleryGrid");
+  grid.innerHTML = items.length
+    ? items.map(p => `
+        <div class="year-gallery-item" onclick="closeYearGallery(); openPhotoModal('${p.key}');">
+          <img src="${p.url}" alt="${escHtml(p.familiaLabel)}" loading="lazy" />
+          <span>${escHtml(p.familiaLabel)}</span>
+        </div>`).join("")
+    : `<p class="admin-empty">— Todavía no hay fotos de ${anio} —</p>`;
+
+  document.getElementById("yearGalleryModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeYearGallery() {
+  document.getElementById("yearGalleryModal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+window.openYearGallery = openYearGallery;
+window.closeYearGallery = closeYearGallery;
 
 function openPhotoModal(key) {
   currentModalKey = key;
