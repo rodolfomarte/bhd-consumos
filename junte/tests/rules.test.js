@@ -462,3 +462,13 @@ test("villaPuntos: admin y aprobados pueden leer; solo admin escribe", async () 
   await assertSucceeds(aliceDb.collection("villaPuntos").doc("perez").get());
   await assertFails(aliceDb.collection("villaPuntos").doc("perez").set({ total: 999999 }));
 });
+
+test("villaPuntosAjustes: admin y aprobados pueden leer; solo admin escribe", async () => {
+  await seedUser("alice", { nombre: "Alice", familia: "perez", familiaLabel: "Pérez", email: "alice@test.com", status: "approved" });
+  const alice = testEnv.authenticatedContext("alice", { email: "alice@test.com" });
+  const aliceDb = alice.firestore();
+  const admin = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true });
+  await assertSucceeds(admin.firestore().collection("villaPuntosAjustes").doc("ajuste1").set({ villa: "perez", motivo: "Espíritu de equipo", puntos: 50 }));
+  await assertSucceeds(aliceDb.collection("villaPuntosAjustes").doc("ajuste1").get());
+  await assertFails(aliceDb.collection("villaPuntosAjustes").doc("ajuste2").set({ villa: "perez", motivo: "me lo invento", puntos: 999 }));
+});

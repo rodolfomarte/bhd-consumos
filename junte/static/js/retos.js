@@ -293,8 +293,11 @@ function openRetoDetail(slug) {
   document.getElementById("detailVillaName").textContent = villaNombreDesdeSlug(slug);
   document.getElementById("detailTitulo").textContent    = reto.titulo || "";
   document.getElementById("detailObjetivo").textContent  = reto.objetivo || "";
-  document.getElementById("detailPuntos").textContent    = (reto.puntos != null) ? `${reto.puntos} pts` : "—";
+  document.getElementById("detailCriterio").textContent  = reto.criterio ? `🏅 Criterio para ganar: ${reto.criterio}` : "";
   document.getElementById("detailFecha").textContent     = formatFechaLimite(reto.fechaLimite);
+  document.getElementById("detailFormHint").textContent  = reto.retoId === "identidad-equipo"
+    ? "Para aprobarse, la entrega necesita: nombre de equipo, eslogan, y una foto donde el equipo muestre su eslogan de forma legible."
+    : "Sube una foto del equipo realizando el reto. El nombre de equipo y el eslogan ya están puestos — solo confírmalos.";
   renderDetailPhoto();
 
   selectedEvidFile = null;
@@ -349,8 +352,29 @@ function renderDetailAccess() {
   document.getElementById("detailViewOnly").style.display    = isCaptain ? "none" : "block";
 
   if (isCaptain) {
-    document.getElementById("evidNombreEquipo").value = evid?.nombreEquipo || "";
-    document.getElementById("evidEslogan").value      = evid?.eslogan || "";
+    if (evid) {
+      document.getElementById("evidNombreEquipo").value = evid.nombreEquipo || "";
+      document.getElementById("evidEslogan").value      = evid.eslogan || "";
+    } else {
+      // Entrega nueva de un reto que no es "Identidad y slogan" — precarga
+      // el nombre de equipo/eslogan ya aprobados en el reto 1, así el
+      // capitán no tiene que volver a escribirlos cada vez.
+      const reto = retosCache[slug];
+      if (reto && reto.retoId !== "identidad-equipo" && typeof fbDb !== "undefined") {
+        fbDb.collection("retoEvidencias").doc(`${slug}_identidad-equipo`).get()
+          .then(snap => {
+            if (currentDetailVilla !== slug || evidenciaCache[slug]) return; // ya cambió o ya hay datos
+            if (snap.exists && snap.data().estado === "aprobado") {
+              document.getElementById("evidNombreEquipo").value = snap.data().nombreEquipo || "";
+              document.getElementById("evidEslogan").value      = snap.data().eslogan || "";
+            }
+          })
+          .catch(err => console.error("Error precargando identidad del equipo:", err));
+      } else {
+        document.getElementById("evidNombreEquipo").value = "";
+        document.getElementById("evidEslogan").value = "";
+      }
+    }
     const preview = document.getElementById("evidFotoPreview");
     if (!selectedEvidFile && evid?.fotoUrl) {
       preview.src = evid.fotoUrl;

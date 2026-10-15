@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRetosTabs();
   initPublishForm();
   initEvidenciaFilters();
+  initAjustesForm();
 
   JunteAuth.subscribe(state => {
     document.getElementById("adminLoading").style.display = state.loading ? "block" : "none";
@@ -35,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
       watchCaptains();
       watchRetosAdmin();
       watchEvidencias();
+      watchAjustes();
     }
     if (!authorized && usersUnsub) {
       usersUnsub(); usersUnsub = null;
@@ -88,7 +90,7 @@ function initRetosTabs() {
   document.querySelectorAll("#retosAdminTabs .admin-tab").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#retosAdminTabs .admin-tab").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll("#retosPanel-capitanes,#retosPanel-publicar,#retosPanel-evidencias")
+      document.querySelectorAll("#retosPanel-capitanes,#retosPanel-publicar,#retosPanel-evidencias,#retosPanel-ajustes")
         .forEach(p => p.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById(`retosPanel-${btn.dataset.retotab}`).classList.add("active");
@@ -249,12 +251,54 @@ const VILLAS = [
   { slug: "cereza",  name: "Villa Cereza",  icon: "🍒" },
   { slug: "bosque",  name: "Villa Bosque",  icon: "🌲" },
 ];
-const CHALLENGE_TEMPLATE = {
-  retoId: "identidad-equipo",
-  titulo: "Crea la identidad de tu equipo",
-  objetivo: "Cada villa debe elegir un nombre para su equipo y crear un eslogan que represente su alegría, unión y espíritu familiar. La entrega es una foto del equipo mostrando su eslogan de forma legible.",
-  entregables: ["nombre_equipo", "eslogan", "foto"],
-};
+// Catálogo de los 7 retos del reglamento (Junte Familiar de Logística 2026).
+// El reto 1 conserva su retoId original ("identidad-equipo") para no romper
+// lo que ya existe en producción; los retos 2-7 usan su número como id.
+const CHALLENGES = [
+  {
+    retoId: "identidad-equipo", numero: 1, titulo: "Identidad y slogan",
+    objetivo: "Crear nombre, slogan y una presentación breve que represente al equipo.",
+    criterio: "Creatividad, identidad, presentación y energía.",
+    entregables: ["nombre_equipo", "eslogan", "foto"],
+  },
+  {
+    retoId: "2", numero: 2, titulo: "Carrera de sacos",
+    objetivo: "Completar el recorrido en sacos, respetando el circuito y los relevos definidos.",
+    criterio: "Menor tiempo con el recorrido completado correctamente.",
+    entregables: ["foto"],
+  },
+  {
+    retoId: "3", numero: 3, titulo: "Tiro al aro",
+    objetivo: "Cada equipo recibe igual cantidad de lanzamientos desde la línea marcada hacia objetivos con valores definidos.",
+    criterio: "Mayor suma de puntos válidos obtenidos.",
+    entregables: ["foto"],
+  },
+  {
+    retoId: "4", numero: 4, titulo: "Saltar la cuerda",
+    objetivo: "Realizar la mayor cantidad de saltos válidos durante 1 minuto.",
+    criterio: "Mayor cantidad de saltos válidos dentro del tiempo.",
+    entregables: ["foto"],
+  },
+  {
+    retoId: "5", numero: 5, titulo: "Tiro al saco",
+    objetivo: "Lanzar desde la línea marcada con igual número de oportunidades por equipo.",
+    criterio: "Mayor cantidad de aciertos válidos.",
+    entregables: ["foto"],
+  },
+  {
+    retoId: "6", numero: 6, titulo: "Búsqueda de patitos/pelotas",
+    objetivo: "Buscar y entregar elementos escondidos dentro del área y tiempo definidos.",
+    criterio: "Mayor cantidad de elementos entregados a tiempo (10 pts por pieza, máximo 100 pts).",
+    entregables: ["foto"],
+  },
+  {
+    retoId: "7", numero: 7, titulo: "Dame hombro",
+    objetivo: "Realizar una performance grupal dentro del tiempo indicado.",
+    criterio: "Coordinación, creatividad, energía y puesta en escena.",
+    entregables: ["foto"],
+  },
+];
+function challengeById(retoId) { return CHALLENGES.find(c => c.retoId === retoId); }
 
 function villaSlugForFamilia(familiaSlug) {
   const idx = FAMILIES_ROSTER.findIndex(v => v.familias.some(f => JunteAuth.slugify(f.nombre) === familiaSlug));
@@ -338,6 +382,17 @@ function initPublishForm() {
   const form = document.getElementById("publishRetoForm");
   if (!form) return;
 
+  const retoSelect = document.getElementById("publishRetoId");
+  retoSelect.innerHTML = CHALLENGES.map(c => `<option value="${c.retoId}">Reto ${c.numero}: ${escAdmin(c.titulo)}</option>`).join("");
+  function renderPreview() {
+    const c = challengeById(retoSelect.value);
+    document.getElementById("publishRetoPreview").innerHTML = c
+      ? `<p><strong>Objetivo:</strong> ${escAdmin(c.objetivo)}</p><p><strong>Criterio para ganar:</strong> ${escAdmin(c.criterio)}</p>`
+      : "";
+  }
+  retoSelect.addEventListener("change", renderPreview);
+  renderPreview();
+
   document.getElementById("publishVillaAll").addEventListener("change", e => {
     document.querySelectorAll('#publishVillaChecks input[type="checkbox"]:not(#publishVillaAll)')
       .forEach(cb => { cb.checked = e.target.checked; });
@@ -352,7 +407,8 @@ function initPublishForm() {
 
     if (!villasElegidas.length) { msg.textContent = "Elige al menos una villa."; return; }
 
-    const puntos = Number(document.getElementById("publishPuntos").value) || 0;
+    const c = challengeById(retoSelect.value);
+    if (!c) { msg.textContent = "Elige un reto válido."; return; }
     const fechaRaw = document.getElementById("publishFechaLimite").value;
     const fechaLimite = fechaRaw ? new Date(fechaRaw) : null;
     const estado = document.getElementById("publishEstado").value;
@@ -363,8 +419,8 @@ function initPublishForm() {
       villasElegidas.forEach(slug => {
         const ref = fbDb.collection("retos").doc(slug);
         batch.set(ref, {
-          ...CHALLENGE_TEMPLATE,
-          puntos,
+          retoId: c.retoId, numero: c.numero, titulo: c.titulo, objetivo: c.objetivo,
+          criterio: c.criterio, entregables: c.entregables,
           fechaLimite,
           estado,
           publishedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -403,8 +459,102 @@ function renderRetosStatusList() {
       <div class="admin-user-card reto-status-row">
         <div class="admin-user-info">
           <strong>${v.icon} ${v.name}</strong>
-          <span>${estadoLabel}${r ? ` · ${r.puntos ?? 0} pts · ${fecha}` : ""}</span>
+          <span>${estadoLabel}${r ? ` · Reto ${r.numero ?? "?"}: ${escAdmin(r.titulo || "")} · ${fecha}` : ""}</span>
         </div>
+      </div>`;
+  }).join("");
+}
+
+/* ── Ajustar puntos (bonus / penalizaciones) ─────────────────────────── */
+let villaPuntosAjustesCache = [];
+
+function initAjustesForm() {
+  const form = document.getElementById("ajustarPuntosForm");
+  if (!form) return;
+
+  const villaSel = document.getElementById("ajusteVilla");
+  villaSel.innerHTML = VILLAS.map(v => `<option value="${v.slug}">${v.icon} ${v.name}</option>`).join("");
+
+  const motivoSel = document.getElementById("ajusteMotivoPreset");
+  const PRESETS = {
+    "": { motivo: "", puntos: "" },
+    "espiritu": { motivo: "Espíritu de equipo", puntos: 50 },
+    "fairplay": { motivo: "Fair Play", puntos: 50 },
+    "salida": { motivo: "Salió antes de la señal de inicio", puntos: -5 },
+    "ayuda": { motivo: "Recibió ayuda externa durante un reto", puntos: -10 },
+    "turnos": { motivo: "No respetó instrucciones o turnos", puntos: -10 },
+    "interferir": { motivo: "Interferir intencionalmente con otro equipo", puntos: -20 },
+    "antideportiva": { motivo: "Conducta antideportiva o falta de respeto", puntos: -20 },
+  };
+  motivoSel.addEventListener("change", () => {
+    const p = PRESETS[motivoSel.value];
+    if (p) {
+      document.getElementById("ajusteMotivo").value = p.motivo;
+      document.getElementById("ajustePuntos").value = p.puntos;
+    }
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const msg = document.getElementById("ajustarPuntosMsg");
+    const villa = villaSel.value;
+    const motivo = document.getElementById("ajusteMotivo").value.trim();
+    const puntos = Number(document.getElementById("ajustePuntos").value);
+    if (!motivo) { msg.textContent = "Escribe un motivo."; return; }
+    if (!Number.isFinite(puntos) || puntos === 0) { msg.textContent = "Escribe un puntaje distinto de 0 (puede ser negativo)."; return; }
+
+    msg.textContent = "Aplicando… ⏳";
+    try {
+      const ajusteRef = fbDb.collection("villaPuntosAjustes").doc();
+      const villaPtsRef = fbDb.collection("villaPuntos").doc(villa);
+      await fbDb.runTransaction(async tx => {
+        const snap = await tx.get(villaPtsRef);
+        const prevTotal = snap.exists ? (snap.data().total || 0) : 0;
+        tx.set(ajusteRef, {
+          villa, motivo, puntos,
+          creadoPor: fbAuth.currentUser.uid,
+          creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        tx.set(villaPtsRef, { total: prevTotal + puntos, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      });
+      msg.textContent = "✅ Ajuste aplicado.";
+      document.getElementById("ajusteMotivo").value = "";
+      document.getElementById("ajustePuntos").value = "";
+      motivoSel.value = "";
+    } catch (err) {
+      console.error(err);
+      msg.textContent = "❌ " + err.message;
+    }
+  });
+}
+
+function watchAjustes() {
+  fbDb.collection("villaPuntosAjustes").orderBy("creadoEn", "desc").limit(50).onSnapshot(
+    snap => {
+      villaPuntosAjustesCache = [];
+      snap.forEach(doc => villaPuntosAjustesCache.push({ id: doc.id, ...doc.data() }));
+      try { renderAjustesList(); } catch (err) { console.error("Error en ajustes:", err); }
+    },
+    err => console.error("Ajustes error:", err)
+  );
+}
+
+function renderAjustesList() {
+  const wrap = document.getElementById("ajustesList");
+  if (!wrap) return;
+  if (!villaPuntosAjustesCache.length) { wrap.innerHTML = `<p class="admin-empty">— Todavía no hay ajustes aplicados —</p>`; return; }
+  wrap.innerHTML = villaPuntosAjustesCache.map(a => {
+    const villa = VILLAS.find(v => v.slug === a.villa);
+    const d = a.creadoEn?.toDate ? a.creadoEn.toDate() : null;
+    const fecha = d ? d.toLocaleString("es-DO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+    return `
+      <div class="admin-user-card">
+        <div class="admin-user-info">
+          <strong>${villa ? villa.icon + " " + villa.name : a.villa}</strong>
+          <span>${escAdmin(a.motivo)}</span>
+          <span class="admin-user-email">${fecha}</span>
+        </div>
+        <span class="reto-status-badge ${a.puntos > 0 ? "open" : "locked"}">${a.puntos > 0 ? "+" : ""}${a.puntos} pts</span>
       </div>`;
   }).join("");
 }
@@ -478,6 +628,7 @@ function renderEvidenciasList(list) {
           ${historialHtml(ev)}
         </div>
         <textarea class="textarea-input" id="evidComentario-${ev.id}" rows="2" placeholder="Comentario (obligatorio para corregir o revocar)"></textarea>
+        <input class="input-inline" type="number" id="evidPuntos-${ev.id}" placeholder="Puntos a otorgar a esta villa" value="${ev.estado === 'aprobado' ? ev.puntosOtorgados : ''}" />
         <div class="evidencia-actions">
           <button class="btn-admin-sm" data-action="aprobar" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado === 'aprobado' ? "disabled" : ""}>✅ Aprobar</button>
           <button class="btn-admin-sm" data-action="corregir" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado !== 'pendiente' ? "disabled" : ""}>✏️ Solicitar corrección</button>
@@ -498,11 +649,19 @@ async function reviewEvidencia(action, btn) {
     alert("Escribe un comentario — es obligatorio para esta acción.");
     return;
   }
+  let puntos;
+  if (action === "aprobar") {
+    puntos = Number(document.getElementById(`evidPuntos-${id}`).value);
+    if (!Number.isFinite(puntos) || puntos < 0) {
+      alert("Escribe el puntaje que le corresponde a esta villa (0 o más) antes de aprobar.");
+      return;
+    }
+  }
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = "…";
   try {
-    await JunteAuth.callFunction("review-evidencia", { method: "POST", body: { villa, retoId, action, comentario } });
+    await JunteAuth.callFunction("review-evidencia", { method: "POST", body: { villa, retoId, action, comentario, puntos } });
     btn.textContent = "✅ Listo";
     setTimeout(() => { btn.textContent = original; }, 1500);
   } catch (err) {

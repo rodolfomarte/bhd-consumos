@@ -982,7 +982,8 @@ body.nav-open-lock {
 .reto-detail-box { width: 440px; max-width: 95vw; padding: 32px 28px; }
 .reto-detail-box h3 { font-size: 1.3rem; color: var(--green-dark); margin-bottom: 4px; }
 .reto-detail-titulo { font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--gold-dark); margin-bottom: 8px; }
-.reto-detail-objetivo { color: var(--text-mid); font-size: .92rem; line-height: 1.5; margin-bottom: 14px; }
+.reto-detail-objetivo { color: var(--text-mid); font-size: .92rem; line-height: 1.5; margin-bottom: 8px; }
+.reto-detail-criterio { color: var(--gold-dark); font-size: .85rem; font-weight: 700; line-height: 1.5; margin-bottom: 14px; }
 .reto-detail-meta { display: flex; gap: 18px; font-size: .85rem; color: var(--text-mid); margin-bottom: 18px; flex-wrap: wrap; }
 .reto-detail-meta strong { color: var(--green-dark); }
 .reto-evid-view h4 { color: var(--green-dark); font-size: 1rem; margin-bottom: 8px; }

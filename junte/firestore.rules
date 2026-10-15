@@ -227,5 +227,15 @@ service cloud.firestore {
       allow read: if isAdmin() || isApproved();
       allow write: if isAdmin();
     }
+
+    /* ───────────── villaPuntosAjustes/{autoId} ─────────────
+       Bonus/penalizaciones sueltas (no ligadas a un reto específico), del
+       reglamento físico — ej. "Espíritu de equipo +50", "Interferir con
+       otro equipo -20". Admin-only; el cliente ajusta villaPuntos.total en
+       la misma transacción al crear uno. */
+    match /villaPuntosAjustes/{autoId} {
+      allow read: if isAdmin() || isApproved();
+      allow write: if isAdmin();
+    }
   }
 }

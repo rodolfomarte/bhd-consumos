@@ -12,14 +12,19 @@ function httpError(statusCode, message) {
 /**
  * POST /.netlify/functions/review-evidencia
  * Authorization: Bearer <Firebase ID token of an admin>
- * Body: { villa, retoId, action: "aprobar"|"corregir"|"revocar", comentario? }
+ * Body: { villa, retoId, action: "aprobar"|"corregir"|"revocar", comentario?, puntos? }
+ * "puntos" is REQUIRED for "aprobar" — the admin types in exactly what that
+ * villa earned for this specific reto (varies per villa/reto: rank-based
+ * scales like 150/120/100/80/60, or a direct tally), not a fixed per-reto
+ * amount.
  *
  * The ONLY place that moves a reto evidence doc between estados, awards or
- * reverses points, and swaps/restores the villa's approved photo. Everything
- * happens inside one Firestore transaction so a double click or two
- * concurrent requests can never double-award points or race each other —
- * the transaction re-reads the current estado and refuses an action that no
- * longer applies (e.g. approving something already approved).
+ * reverses points, and (for reto 1 only — "identidad-equipo") swaps/restores
+ * the villa's representative photo. Everything happens inside one Firestore
+ * transaction so a double click or two concurrent requests can never
+ * double-award points or race each other — the transaction re-reads the
+ * current estado and refuses an action that no longer applies (e.g.
+ * approving something already approved).
  */
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -38,7 +43,7 @@ exports.handler = async (event) => {
       return { statusCode: 403, body: JSON.stringify({ error: "Solo un administrador puede revisar evidencias." }) };
     }
 
-    const { villa, retoId, action, comentario } = JSON.parse(event.body || "{}");
+    const { villa, retoId, action, comentario, puntos: puntosRaw } = JSON.parse(event.body || "{}");
     if (!villa || !retoId || !VALID_ACTIONS.has(action)) {
       return { statusCode: 400, body: JSON.stringify({ error: "Faltan datos o la acción no es válida." }) };
     }
@@ -46,16 +51,24 @@ exports.handler = async (event) => {
     if ((action === "corregir" || action === "revocar") && !comentarioTrim) {
       return { statusCode: 400, body: JSON.stringify({ error: "El comentario es obligatorio para esta acción." }) };
     }
+    let puntos = Number(puntosRaw);
+    if (action === "aprobar" && (!Number.isFinite(puntos) || puntos < 0)) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Escribe el puntaje (0 o más) que le corresponde a esta villa." }) };
+    }
+
+    // Reto 1 ("identidad-equipo") es el único cuya foto se vuelve la imagen
+    // representativa de la villa — los demás retos (juegos físicos) solo
+    // suman puntos, la foto es evidencia, no reemplaza nada.
+    const esRetoIdentidad = retoId === "identidad-equipo";
 
     const docId       = `${villa}_${retoId}`;
     const evidRef     = db().collection("retoEvidencias").doc(docId);
-    const retoRef     = db().collection("retos").doc(villa);
     const villaImgRef = db().collection("villaImagenes").doc(villa);
     const villaPtsRef = db().collection("villaPuntos").doc(villa);
 
     const result = await db().runTransaction(async (tx) => {
-      const [evidSnap, retoSnap, villaImgSnap, villaPtsSnap] = await Promise.all([
-        tx.get(evidRef), tx.get(retoRef), tx.get(villaImgRef), tx.get(villaPtsRef),
+      const [evidSnap, villaImgSnap, villaPtsSnap] = await Promise.all([
+        tx.get(evidRef), tx.get(villaImgRef), tx.get(villaPtsRef),
       ]);
       if (!evidSnap.exists) throw httpError(404, "Esa entrega ya no existe.");
       const evid = evidSnap.data();
@@ -69,27 +82,28 @@ exports.handler = async (event) => {
         if (!evid.fotoUrl || !evid.nombreEquipo || !evid.eslogan) {
           throw httpError(400, "Faltan nombre de equipo, eslogan o foto para poder aprobar.");
         }
-        const puntos = (retoSnap.exists && typeof retoSnap.data().puntos === "number") ? retoSnap.data().puntos : 0;
         const prevImg = villaImgSnap.exists ? villaImgSnap.data() : null;
 
         tx.update(evidRef, {
           estado: "aprobado",
           puntosOtorgados: puntos,
-          imagenAnteriorUrl: prevImg?.url ?? null,
-          imagenAnteriorPath: prevImg?.path ?? null,
+          imagenAnteriorUrl: esRetoIdentidad ? (prevImg?.url ?? null) : (evid.imagenAnteriorUrl ?? null),
+          imagenAnteriorPath: esRetoIdentidad ? (prevImg?.path ?? null) : (evid.imagenAnteriorPath ?? null),
           comentarioAdmin: null,
           reviewedBy: decoded.uid,
           reviewedAt: now,
           updatedAt: now,
           historial: admin.firestore.FieldValue.arrayUnion({ ...historialBase, accion: "aprobado" }),
         });
-        tx.set(villaImgRef, {
-          url: evid.fotoUrl,
-          path: evid.fotoPath || null,
-          fuente: "aprobado",
-          evidenciaId: docId,
-          updatedAt: now,
-        });
+        if (esRetoIdentidad) {
+          tx.set(villaImgRef, {
+            url: evid.fotoUrl,
+            path: evid.fotoPath || null,
+            fuente: "aprobado",
+            evidenciaId: docId,
+            updatedAt: now,
+          });
+        }
         const prevTotal = villaPtsSnap.exists ? (villaPtsSnap.data().total || 0) : 0;
         tx.set(villaPtsRef, { total: prevTotal + puntos, updatedAt: now }, { merge: true });
 
@@ -125,13 +139,15 @@ exports.handler = async (event) => {
         updatedAt: now,
         historial: admin.firestore.FieldValue.arrayUnion({ ...historialBase, accion: "revocado" }),
       });
-      tx.set(villaImgRef, {
-        url: evid.imagenAnteriorUrl ?? null,
-        path: evid.imagenAnteriorPath ?? null,
-        fuente: evid.imagenAnteriorUrl ? "aprobado" : "default",
-        evidenciaId: null,
-        updatedAt: now,
-      });
+      if (esRetoIdentidad) {
+        tx.set(villaImgRef, {
+          url: evid.imagenAnteriorUrl ?? null,
+          path: evid.imagenAnteriorPath ?? null,
+          fuente: evid.imagenAnteriorUrl ? "aprobado" : "default",
+          evidenciaId: null,
+          updatedAt: now,
+        });
+      }
       const prevTotal = villaPtsSnap.exists ? (villaPtsSnap.data().total || 0) : 0;
       tx.set(villaPtsRef, { total: Math.max(0, prevTotal - puntosARevertir), updatedAt: now }, { merge: true });
 

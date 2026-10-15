@@ -132,7 +132,7 @@
 <section class="section retos-roadmap-section">
   <div class="section-header">
     <h2 class="section-title">🗺️ Hoja de ruta</h2>
-    <p class="section-sub">10 retos en total — se irán revelando uno a la vez durante el Junté</p>
+    <p class="section-sub">7 retos en total — se irán revelando uno a la vez durante el Junté</p>
   </div>
   <div class="retos-roadmap-list">
     <div class="roadmap-item unlocked">
@@ -168,21 +168,6 @@
     <div class="roadmap-item">
       <span class="roadmap-num">7</span>
       <span class="roadmap-title">Reto #7</span>
-      <span class="reto-status-badge locked">🔒 Bloqueado</span>
-    </div>
-    <div class="roadmap-item">
-      <span class="roadmap-num">8</span>
-      <span class="roadmap-title">Reto #8</span>
-      <span class="reto-status-badge locked">🔒 Bloqueado</span>
-    </div>
-    <div class="roadmap-item">
-      <span class="roadmap-num">9</span>
-      <span class="roadmap-title">Reto #9</span>
-      <span class="reto-status-badge locked">🔒 Bloqueado</span>
-    </div>
-    <div class="roadmap-item">
-      <span class="roadmap-num">10</span>
-      <span class="roadmap-title">Reto #10</span>
       <span class="reto-status-badge locked">🔒 Bloqueado</span>
     </div>
   </div>
@@ -222,8 +207,8 @@
     <img class="reto-detail-photo" id="detailVillaPhoto" style="display:none" alt="Foto del equipo" />
     <p class="reto-detail-titulo" id="detailTitulo"></p>
     <p class="reto-detail-objetivo" id="detailObjetivo"></p>
+    <p class="reto-detail-criterio" id="detailCriterio"></p>
     <div class="reto-detail-meta">
-      <span>🏅 <strong id="detailPuntos">—</strong></span>
       <span>⏰ <strong id="detailFecha">—</strong></span>
     </div>
 
@@ -232,7 +217,7 @@
     <form id="detailCaptainForm" class="upload-form" style="display:none">
       <p class="account-hint">Eres el capitán de esta villa — envía o actualiza la entrega del equipo.</p>
       <p class="account-msg" id="evidCurrentStatus" style="display:none"></p>
-      <p class="reto-criteria">Para aprobarse, la entrega necesita: nombre de equipo, eslogan, y una foto donde el equipo muestre su eslogan de forma legible.</p>
+      <p class="reto-criteria" id="detailFormHint">Para aprobarse, la entrega necesita: nombre de equipo, eslogan, y una foto donde el equipo muestre su eslogan de forma legible.</p>
       <label>Nombre del equipo</label>
       <input type="text" id="evidNombreEquipo" class="input-inline" maxlength="60" required />
       <label>Eslogan</label>

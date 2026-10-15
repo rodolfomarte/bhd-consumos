@@ -120,6 +120,7 @@
       <button class="admin-tab active" data-retotab="capitanes">👑 Capitanes</button>
       <button class="admin-tab" data-retotab="publicar">📣 Publicar Reto</button>
       <button class="admin-tab" data-retotab="evidencias">📋 Evidencias <span class="admin-tab-count" id="tabCountEvid">0</span></button>
+      <button class="admin-tab" data-retotab="ajustes">💰 Ajustar Puntos</button>
     </div>
 
     <div class="admin-tab-panel active" id="retosPanel-capitanes">
@@ -129,9 +130,10 @@
 
     <div class="admin-tab-panel" id="retosPanel-publicar">
       <div class="admin-settings-card">
-        <h3 style="color:var(--green-dark);margin-bottom:4px">Crea la identidad de tu equipo</h3>
-        <p class="account-hint" style="margin-bottom:14px">Cada villa debe elegir un nombre de equipo y un eslogan que represente su alegría, unión y espíritu familiar, y entregar una foto donde se lea el eslogan.</p>
         <form id="publishRetoForm" class="account-form">
+          <label>¿Qué reto?</label>
+          <select id="publishRetoId" class="select-input"></select>
+          <div id="publishRetoPreview" class="account-hint" style="margin-bottom:4px"></div>
           <label>Villas a publicar</label>
           <div class="reto-villa-checks" id="publishVillaChecks">
             <label><input type="checkbox" value="palmera" /> 🌴 Villa Palmera</label>
@@ -141,9 +143,7 @@
             <label><input type="checkbox" value="bosque" /> 🌲 Villa Bosque</label>
             <label><input type="checkbox" id="publishVillaAll" /> <strong>Todas</strong></label>
           </div>
-          <label>Puntuación</label>
-          <input type="number" id="publishPuntos" class="input-inline" value="100" min="0" step="10" />
-          <label>Fecha límite</label>
+          <label>Fecha límite (opcional)</label>
           <input type="datetime-local" id="publishFechaLimite" class="input-inline" />
           <label>Estado</label>
           <select id="publishEstado" class="select-input">
@@ -155,6 +155,34 @@
         </form>
       </div>
       <div id="retosStatusList" class="admin-user-list"></div>
+    </div>
+
+    <div class="admin-tab-panel" id="retosPanel-ajustes">
+      <p class="account-hint" style="margin-bottom:14px">Bonus (+) o penalizaciones (−) sueltas por villa, según el reglamento. Se suman al total de esa villa y quedan en el historial de abajo.</p>
+      <div class="admin-settings-card">
+        <form id="ajustarPuntosForm" class="account-form">
+          <label>Villa</label>
+          <select id="ajusteVilla" class="select-input"></select>
+          <label>Motivo frecuente (opcional, llena los campos de abajo)</label>
+          <select id="ajusteMotivoPreset" class="select-input">
+            <option value="">— Escribir manualmente —</option>
+            <option value="espiritu">🎉 Espíritu de equipo (+50)</option>
+            <option value="fairplay">🤝 Fair Play (+50)</option>
+            <option value="salida">⛔ Salió antes de la señal (−5)</option>
+            <option value="ayuda">⛔ Ayuda externa durante un reto (−10)</option>
+            <option value="turnos">⛔ No respetó instrucciones/turnos (−10)</option>
+            <option value="interferir">⛔ Interferir con otro equipo (−20)</option>
+            <option value="antideportiva">⛔ Conducta antideportiva (−20)</option>
+          </select>
+          <label>Motivo</label>
+          <input type="text" id="ajusteMotivo" class="input-inline" maxlength="120" />
+          <label>Puntos (negativo para penalizar)</label>
+          <input type="number" id="ajustePuntos" class="input-inline" step="5" />
+          <p class="account-msg" id="ajustarPuntosMsg"></p>
+          <button type="submit" class="btn-primary" style="width:100%;margin-top:6px">Aplicar ajuste</button>
+        </form>
+      </div>
+      <div id="ajustesList" class="admin-user-list"></div>
     </div>
 
     <div class="admin-tab-panel" id="retosPanel-evidencias">
