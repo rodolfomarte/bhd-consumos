@@ -16,12 +16,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const ICON_OPEN  = "☰"; // ☰
     const ICON_CLOSE = "×"; // ×
     let lastFocused = null;
+    let savedScrollY = 0;
 
+    // Bloquear el scroll de fondo con solo "overflow:hidden" en el body NO
+    // funciona de forma confiable en iOS Safari: el arrastre se filtra a la
+    // página de atrás en vez de desplazar el menú, y algunas opciones nunca
+    // llegan a verse. Fijar el body en su posición actual sí bloquea el
+    // arrastre de verdad en iOS — y al cerrar se restaura el scroll exacto.
     function openMenu() {
       links.classList.add("open");
       toggle.innerHTML = ICON_CLOSE;
       toggle.setAttribute("aria-expanded", "true");
+      savedScrollY = window.scrollY || window.pageYOffset || 0;
       document.body.classList.add("nav-open-lock");
+      document.body.style.top = `-${savedScrollY}px`;
       lastFocused = document.activeElement;
       document.addEventListener("keydown", onKeydown);
       document.addEventListener("click", onOutsideClick, true);
@@ -32,6 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
       toggle.innerHTML = ICON_OPEN;
       toggle.setAttribute("aria-expanded", "false");
       document.body.classList.remove("nav-open-lock");
+      document.body.style.top = "";
+      window.scrollTo(0, savedScrollY);
       document.removeEventListener("keydown", onKeydown);
       document.removeEventListener("click", onOutsideClick, true);
       if (lastFocused && lastFocused.focus) lastFocused.focus();

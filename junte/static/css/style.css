@@ -719,7 +719,15 @@ body.admin-mode .live-filter-section { top: 98px; }
   }
   .mapa-img { width: auto; max-width: 100%; height: auto; max-height: 60vh; object-fit: contain; margin: 0 auto; cursor: zoom-in; }
 }
-body.nav-open-lock { overflow: hidden; }
+/* overflow:hidden solo no basta en iOS Safari (no bloquea el arrastre de
+   verdad) — fijar el body en su lugar (top negativo = scroll guardado,
+   restaurado por nav.js al cerrar) sí impide el arrastre de fondo. */
+body.nav-open-lock {
+  overflow: hidden;
+  position: fixed;
+  left: 0; right: 0;
+  width: 100%;
+}
 @media (max-width: 640px) {
   .nav-links {
     display: none; flex-direction: column;
@@ -1074,3 +1082,14 @@ body.nav-open-lock { overflow: hidden; }
   width: 100%; height: auto; display: block; border-radius: var(--radius);
   box-shadow: var(--shadow-lg); cursor: zoom-in;
 }
+
+/* ─── Mural: resumen por año ─────────────────────────────────────────────── */
+.mural-year-summary { max-width: 700px; margin: 32px auto 0; text-align: center; }
+.mural-year-summary h3 { color: var(--green-dark); margin-bottom: 14px; font-size: 1.1rem; }
+.mural-year-summary-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.year-summary-item {
+  background: var(--white); border-radius: var(--radius-sm); box-shadow: var(--shadow);
+  padding: 10px 18px; display: flex; flex-direction: column; align-items: center; min-width: 80px;
+}
+.year-summary-year { font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--green-dark); font-size: 1rem; }
+.year-summary-count { font-size: .78rem; color: var(--text-mid); margin-top: 2px; }

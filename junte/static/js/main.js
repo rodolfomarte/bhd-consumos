@@ -327,6 +327,26 @@ function renderMuralGrid() {
     });
   });
   html += `</div></div>`;
+
+  // Resumen por año: cuántas fotos hay cargadas en cada año — respeta lo
+  // mismo que ya se puede ver arriba (la propia familia, o todas si el
+  // admin habilitó la galería general o es admin).
+  const countsByYear = YEARS.map(anio => ({
+    anio,
+    count: Object.values(muralCache).filter(p => p.anio === anio).length,
+  }));
+  html += `
+    <div class="mural-year-summary">
+      <h3>📊 Resumen por año</h3>
+      <div class="mural-year-summary-list">
+        ${countsByYear.map(({ anio, count }) => `
+          <div class="year-summary-item">
+            <span class="year-summary-year">${anio}</span>
+            <span class="year-summary-count">${count} foto${count === 1 ? "" : "s"}</span>
+          </div>`).join("")}
+      </div>
+    </div>`;
+
   wrap.innerHTML = html;
 }
 
