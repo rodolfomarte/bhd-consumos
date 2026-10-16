@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (authorized && !usersUnsub) {
       initGalleryToggle();
+      initRecalcularVillaRegistros();
       watchUsers();
       initStorageWidget();
       watchCaptains();
@@ -148,6 +149,24 @@ async function loadStorageUsage() {
 }
 
 /* ══════════════════ GALERÍA GENERAL ═══════════════════════════════════════ */
+function initRecalcularVillaRegistros() {
+  const btn = document.getElementById("btnRecalcularVillaRegistros");
+  const msg = document.getElementById("recalcularVillaRegistrosMsg");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    msg.textContent = "Recalculando… ⏳";
+    try {
+      await JunteAuth.callFunction("backfill-familia-registros", { method: "POST" });
+      msg.textContent = "✅ Listo — los conteos públicos de Nuestras Villas ya reflejan todas las cuentas existentes.";
+    } catch (err) {
+      msg.textContent = "❌ " + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 function initGalleryToggle() {
   const toggle = document.getElementById("galleryToggle");
   const msg    = document.getElementById("gallerySettingMsg");

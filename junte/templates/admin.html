@@ -68,8 +68,13 @@
 
     <div class="admin-settings-card">
       <h3 style="color:var(--green-dark);margin-bottom:4px">📊 Registrados por Villa</h3>
-      <p class="account-hint" style="margin-bottom:14px">Cada familia del roster, con cuántas cuentas tiene registradas (cualquier estado) — en rojo las que todavía no tienen a nadie.</p>
+      <p class="account-hint" style="margin-bottom:14px">Cada familia del roster, con cuántas cuentas tiene registradas (cualquier estado) — en rojo las que todavía no tienen a nadie. Esto se ve solo aquí, siempre en vivo.</p>
       <div id="villaResumenGrid" class="villas-grid"></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px dashed #ddd">
+        <p class="account-hint" style="margin-bottom:8px">Aparte, en la página pública "Nuestras Villas" cada familia muestra su propio conteo de registrados — pero ese solo sube con cuentas creadas a partir de hoy. Si tienes cuentas de antes, usa esto una vez para que también cuenten ahí:</p>
+        <button class="btn-secondary" id="btnRecalcularVillaRegistros" type="button">🔄 Recalcular "Registrados" públicos desde las cuentas existentes</button>
+        <p class="account-msg" id="recalcularVillaRegistrosMsg"></p>
+      </div>
     </div>
 
     <div class="admin-settings-card">
