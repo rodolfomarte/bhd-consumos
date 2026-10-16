@@ -342,6 +342,19 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .clima-actual-info { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
 .clima-actual-temp { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.6rem; color: var(--gold); line-height: 1; }
 .clima-actual-cond { font-size: .78rem; color: rgba(255,255,255,.85); }
+
+.proximo-evento {
+  background: var(--gold); border-radius: var(--radius); padding: 14px 24px;
+  margin: 0 auto 28px; max-width: 320px; box-shadow: 0 4px 20px rgba(245,183,49,.35);
+}
+.proximo-evento-msg {
+  font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: .95rem;
+  color: var(--green-dark); margin: 0 0 4px;
+}
+.proximo-evento-timer {
+  font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.5rem;
+  color: var(--green-dark); letter-spacing: 1px; font-variant-numeric: tabular-nums;
+}
 .day-panel { display: none; } .day-panel.active { display: block; }
 .menu-panel { display: none; } .menu-panel.active { display: block; }
 .timeline { max-width: 680px; margin: 0 auto; position: relative; padding-left: 40px; }

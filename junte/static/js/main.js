@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ["modal de foto",    initPhotoModal],
     ["textos editables", loadEditableTexts],
     ["cuenta regresiva", initCountdown],
+    ["próximo evento",   watchProximoEvento],
     ["zoom del mapa",    initMapaZoom],
     ["fotos de villas",  watchVillaImagenesHome],
     ["zoom de villas",   initVillaPhotoZoom],
@@ -252,6 +253,52 @@ function initDayTabs() {
       });
     });
   });
+}
+
+/* ══════════════════ PRÓXIMO EVENTO (mensaje + cronómetro) ══════════════
+   Lo configura el admin desde /admin — visible para cualquiera, igual que
+   la cuenta regresiva principal. Si está desactivado o la fecha ya pasó,
+   no se muestra nada. */
+let proximoEventoTimer = null;
+
+function watchProximoEvento() {
+  if (typeof fbDb === "undefined") return;
+  fbDb.collection("config").doc("proximoEvento").onSnapshot(
+    snap => {
+      try { renderProximoEvento(snap.exists ? snap.data() : null); }
+      catch (err) { console.error("Error mostrando el próximo evento:", err); }
+    },
+    err => console.error("Error leyendo el próximo evento:", err)
+  );
+}
+
+function renderProximoEvento(datos) {
+  const wrap = document.getElementById("proximoEventoWrap");
+  if (!wrap) return;
+  if (proximoEventoTimer) { clearInterval(proximoEventoTimer); proximoEventoTimer = null; }
+
+  const fecha = datos?.fechaHora?.toDate ? datos.fechaHora.toDate() : null;
+  if (!datos?.activo || !datos?.mensaje || !fecha) { wrap.style.display = "none"; return; }
+
+  document.getElementById("proximoEventoMsg").textContent = `📢 ${datos.mensaje}`;
+  const timerEl = document.getElementById("proximoEventoTimer");
+
+  function tick() {
+    const diff = fecha - new Date();
+    if (diff <= 0) {
+      timerEl.textContent = "¡Ya mismo! 🎉";
+      clearInterval(proximoEventoTimer);
+      proximoEventoTimer = null;
+      return;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    timerEl.textContent = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+  tick();
+  proximoEventoTimer = setInterval(tick, 1000);
+  wrap.style.display = "block";
 }
 
 /* ══════════════════ CLIMA DEL ITINERARIO ═══════════════════════════════

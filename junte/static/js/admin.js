@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (authorized && !usersUnsub) {
       initGalleryToggle();
+      initProximoEventoForm();
       initRecalcularVillaRegistros();
       watchUsers();
       initStorageWidget();
@@ -184,6 +185,50 @@ function initGalleryToggle() {
     } catch (err) {
       msg.textContent = "❌ " + err.message;
       toggle.checked = !toggle.checked;
+    }
+  });
+}
+
+/* Formatea un Date a lo que espera un <input type="datetime-local"> en
+   hora LOCAL del navegador (sin esto, toISOString() lo pondría en UTC y
+   la hora mostrada no sería la que el admin realmente escribió). */
+function toDatetimeLocalValue(date) {
+  const pad = n => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function initProximoEventoForm() {
+  const form = document.getElementById("proximoEventoForm");
+  if (!form) return;
+  const msg = document.getElementById("proximoEventoMsgAdmin");
+  const ref = fbDb.collection("config").doc("proximoEvento");
+
+  ref.onSnapshot(snap => {
+    const d = snap.exists ? snap.data() : null;
+    document.getElementById("peMensaje").value = d?.mensaje || "";
+    document.getElementById("peActivo").checked = !!d?.activo;
+    const fecha = d?.fechaHora?.toDate ? d.fechaHora.toDate() : null;
+    document.getElementById("peFechaHora").value = fecha ? toDatetimeLocalValue(fecha) : "";
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const mensaje = document.getElementById("peMensaje").value.trim();
+    const fechaStr = document.getElementById("peFechaHora").value;
+    const activo = document.getElementById("peActivo").checked;
+    if (activo && (!mensaje || !fechaStr)) {
+      msg.textContent = "Escribe el mensaje y la fecha/hora antes de activarlo.";
+      return;
+    }
+    try {
+      await ref.set({
+        mensaje,
+        fechaHora: fechaStr ? firebase.firestore.Timestamp.fromDate(new Date(fechaStr)) : null,
+        activo,
+      });
+      msg.textContent = "✅ Guardado.";
+    } catch (err) {
+      msg.textContent = "❌ " + err.message;
     }
   });
 }
@@ -714,13 +759,36 @@ function renderEvidenciasList(list) {
           <button class="btn-admin-sm" data-action="aprobar" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado === 'aprobado' ? "disabled" : ""}>✅ Aprobar</button>
           <button class="btn-admin-sm" data-action="corregir" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado !== 'pendiente' ? "disabled" : ""}>✏️ Solicitar corrección</button>
           <button class="btn-admin-sm danger" data-action="revocar" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado !== 'aprobado' ? "disabled" : ""}>↩️ Revocar aprobación</button>
+          <button class="btn-admin-sm danger" data-action="borrar" data-id="${ev.id}" data-villa="${ev.villa}" data-reto="${ev.retoId}" ${ev.estado === 'aprobado' ? "disabled title='Primero revoca la aprobación — si no, quedan puntos y foto de villa sin revertir.'" : ""}>🗑️ Borrar evidencia</button>
         </div>
       </div>`;
   }).join("");
 
   wrap.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener("click", () => reviewEvidencia(btn.dataset.action, btn));
+    btn.addEventListener("click", () => {
+      if (btn.dataset.action === "borrar") borrarEvidencia(btn);
+      else reviewEvidencia(btn.dataset.action, btn);
+    });
   });
+}
+
+async function borrarEvidencia(btn) {
+  const { villa, reto: retoId, id } = btn.dataset;
+  const ev = evidenciasAll.find(e => e.id === id);
+  if (!ev) return;
+  if (!confirm(`¿Borrar la entrega de ${villa} (${ev.nombreEquipo || "sin nombre"}) para este reto? Esto no se puede deshacer.`)) return;
+
+  btn.disabled = true;
+  try {
+    if (ev.fotoPath) {
+      try { await fbStorage.ref(ev.fotoPath).delete(); }
+      catch (err) { console.error("No se pudo borrar la foto en Storage (se sigue con el borrado del registro):", err); }
+    }
+    await fbDb.collection("retoEvidencias").doc(id).delete();
+  } catch (err) {
+    alert("Error: " + err.message);
+    btn.disabled = false;
+  }
 }
 
 async function reviewEvidencia(action, btn) {

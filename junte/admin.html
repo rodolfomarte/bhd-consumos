@@ -86,6 +86,23 @@
       <p class="account-msg" id="gallerySettingMsg"></p>
     </div>
 
+    <div class="admin-settings-card">
+      <h3 style="color:var(--green-dark);margin-bottom:4px">📢 Próximo evento (mensaje + cronómetro)</h3>
+      <p class="account-hint" style="margin-bottom:14px">Se ve en Inicio para cualquiera, con cuenta regresiva en vivo. Desactívalo cuando ya pasó.</p>
+      <form id="proximoEventoForm" class="account-form">
+        <label>Mensaje</label>
+        <input type="text" id="peMensaje" class="input-inline" maxlength="80" placeholder="Ej. Almuerzo" />
+        <label>Fecha y hora</label>
+        <input type="datetime-local" id="peFechaHora" class="input-inline" />
+        <label class="switch-row" style="margin-top:10px">
+          <input type="checkbox" id="peActivo" />
+          <span>Activo (visible en Inicio ahora mismo)</span>
+        </label>
+        <p class="account-msg" id="proximoEventoMsgAdmin"></p>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:6px">Guardar</button>
+      </form>
+    </div>
+
     <div class="admin-settings-card storage-widget">
       <div class="storage-widget-header">
         <h3>📦 Almacenamiento de fotos</h3>

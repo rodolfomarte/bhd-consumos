@@ -768,3 +768,13 @@ test("familiaRegistros: NO puedes tocar el conteo ni la actividad de otra famili
   await assertFails(aliceDb.collection("familiaRegistros").doc("cafe").set({ ultimaActividad: new Date() }, { merge: true }));
   await assertFails(aliceDb.collection("familiaRegistros").doc("cafe").set({ registrados: 999, ultimaActividad: new Date() }));
 });
+
+/* ═══ config/proximoEvento ═══════════════════════════════════════════ */
+test("config/proximoEvento: cualquiera (incluso sin cuenta) puede leerlo; solo admin escribe", async () => {
+  const anonDb = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(anonDb.collection("config").doc("proximoEvento").get());
+  await assertFails(anonDb.collection("config").doc("proximoEvento").set({ mensaje: "Almuerzo", activo: true }));
+
+  const adminDb = testEnv.authenticatedContext("admin1", { email: "admin@test.com", admin: true }).firestore();
+  await assertSucceeds(adminDb.collection("config").doc("proximoEvento").set({ mensaje: "Almuerzo", fechaHora: new Date(), activo: true }));
+});

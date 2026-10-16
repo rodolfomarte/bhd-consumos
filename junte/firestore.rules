@@ -83,6 +83,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    /* "Próximo evento" — mensaje + cronómetro en Inicio, visible para
+       CUALQUIERA (mismo nivel de apertura que el hero y la cuenta
+       regresiva principal, que tampoco piden cuenta). */
+    match /config/proximoEvento {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     /* ───────────── publicContent/{docId} ─────────────
        Villas/agenda/menu — public marketing info, same as the rest of the
        landing page (itinerary, map, history). Readable by anyone, no login
