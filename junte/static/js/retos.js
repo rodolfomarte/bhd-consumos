@@ -22,6 +22,9 @@ let evidenciaUnsub      = null;
 let currentDetailVilla  = null;
 let selectedEvidFile    = null;
 let villaPuntosCache    = {}; // slug -> total
+let retoEvidenciasAllCache = {}; // "<villa>_<retoId>" -> puntosOtorgados (solo si aprobado)
+let villaAjustesCache      = {}; // slug -> { bonus, penal } (sumas de villaPuntosAjustes)
+const RETO_IDS_ORDER = ["identidad-equipo", "2", "3", "4", "5", "6", "7"];
 
 const VILLA_INFO = {
   palmera: { name: "Villa Palmera", icon: "🌴" },
@@ -185,6 +188,35 @@ function watchVillaPuntos() {
       err => console.error(`Error leyendo puntos de ${slug}:`, err) // se queda el aviso de siempre
     );
   });
+
+  fbDb.collection("retoEvidencias").onSnapshot(
+    snap => {
+      retoEvidenciasAllCache = {};
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.estado === "aprobado") {
+          retoEvidenciasAllCache[`${d.villa}_${d.retoId}`] = d.puntosOtorgados || 0;
+        }
+      });
+      try { renderLeaderboard(); } catch (err) { console.error("Error en tabla de posiciones:", err); }
+    },
+    err => console.error("Error leyendo evidencias para la tabla de posiciones:", err)
+  );
+
+  fbDb.collection("villaPuntosAjustes").onSnapshot(
+    snap => {
+      villaAjustesCache = {};
+      VILLA_SLUGS.forEach(slug => { villaAjustesCache[slug] = { bonus: 0, penal: 0 }; });
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (!villaAjustesCache[d.villa]) return;
+        if ((d.puntos || 0) > 0) villaAjustesCache[d.villa].bonus += d.puntos;
+        else villaAjustesCache[d.villa].penal += d.puntos;
+      });
+      try { renderLeaderboard(); } catch (err) { console.error("Error en tabla de posiciones:", err); }
+    },
+    err => console.error("Error leyendo ajustes para la tabla de posiciones:", err)
+  );
 }
 
 function renderLeaderboard() {
@@ -207,14 +239,41 @@ function renderLeaderboard() {
 
   wrap.classList.add("has-data");
   empty.style.display = "none";
-  list.style.display = "flex";
-  list.innerHTML = ranked.map((v, i) => `
-    <div class="retos-leaderboard-row ${i === 0 ? "rank-1" : ""}">
-      <span class="retos-leaderboard-rank">${i + 1}</span>
-      <span class="retos-leaderboard-icon">${v.icon}</span>
-      <span class="retos-leaderboard-name">${v.name}</span>
-      <span class="retos-leaderboard-pts">${v.puntos} pts</span>
-    </div>`).join("");
+  list.style.display = "block";
+
+  const headerCols = RETO_IDS_ORDER.map((_, i) => `<th>R${i + 1}</th>`).join("");
+
+  const rows = ranked.map((v, i) => {
+    const retoCells = RETO_IDS_ORDER.map(retoId => {
+      const pts = retoEvidenciasAllCache[`${v.slug}_${retoId}`];
+      return `<td>${pts === undefined ? "" : pts}</td>`;
+    }).join("");
+    const ajuste = villaAjustesCache[v.slug] || { bonus: 0, penal: 0 };
+    return `
+      <tr class="${i === 0 ? "rank-1" : ""}">
+        <td class="leaderboard-table-villa">${v.icon} ${v.name}</td>
+        ${retoCells}
+        <td>${ajuste.bonus > 0 ? `+${ajuste.bonus}` : ""}</td>
+        <td>${ajuste.penal < 0 ? ajuste.penal : ""}</td>
+        <td class="leaderboard-table-total">${v.puntos}</td>
+      </tr>`;
+  }).join("");
+
+  list.innerHTML = `
+    <div class="mural-table-wrap">
+      <table class="mural-table leaderboard-table">
+        <thead>
+          <tr>
+            <th>Villa</th>
+            ${headerCols}
+            <th>Bonus</th>
+            <th>Penal.</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
 function renderDetailPhoto() {

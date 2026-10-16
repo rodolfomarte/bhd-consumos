@@ -960,7 +960,7 @@ body.nav-open-lock {
   background: var(--white); border: 2px dashed #ddd; border-radius: var(--radius);
   padding: 24px 20px;
 }
-.retos-leaderboard-placeholder.has-data { border-style: solid; border-color: var(--gold); }
+.retos-leaderboard-placeholder.has-data { border-style: solid; border-color: var(--gold); max-width: 960px; }
 .retos-leaderboard-placeholder h3 { color: var(--green-dark); margin-bottom: 8px; }
 .retos-leaderboard-placeholder p { color: #999; font-size: .9rem; }
 .retos-leaderboard-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
@@ -977,6 +977,27 @@ body.nav-open-lock {
 .retos-leaderboard-icon { font-size: 1.3rem; flex-shrink: 0; }
 .retos-leaderboard-name { flex: 1; font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--text-dark); }
 .retos-leaderboard-pts { font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--gold-dark); }
+
+.leaderboard-table { min-width: 760px; border-collapse: collapse; font-family: 'Open Sans', sans-serif; }
+.leaderboard-table thead tr { background: var(--green-dark); color: var(--white); }
+.leaderboard-table th {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .82rem;
+  padding: 10px 8px; text-align: center; white-space: nowrap;
+}
+.leaderboard-table th:first-child { text-align: left; padding-left: 14px; }
+.leaderboard-table td {
+  padding: 9px 8px; text-align: center; font-size: .9rem; color: var(--text-dark);
+  border-bottom: 1px solid #eee;
+}
+.leaderboard-table tbody tr:nth-child(even) { background: var(--off-white); }
+.leaderboard-table tbody tr.rank-1 { background: #FFF8E1; }
+.leaderboard-table-villa {
+  text-align: left !important; padding-left: 14px !important;
+  font-family: 'Montserrat', sans-serif; font-weight: 700; white-space: nowrap;
+}
+.leaderboard-table-total {
+  font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--gold-dark); font-size: 1rem;
+}
 
 /* ─── Reto detalle (modal) ──────────────────────────────────────────────── */
 .reto-detail-box { width: 440px; max-width: 95vw; padding: 32px 28px; }
