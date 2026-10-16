@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // corren (antes, un solo error aquí dejaba la página entera en blanco).
   const steps = [
     ["pestañas por día", initDayTabs],
+    ["clima del itinerario", initClimaItinerario],
     ["modal de subida",  initUploadModal],
     ["modal de foto",    initPhotoModal],
     ["textos editables", loadEditableTexts],
@@ -251,6 +252,57 @@ function initDayTabs() {
       });
     });
   });
+}
+
+/* ══════════════════ CLIMA DEL ITINERARIO ═══════════════════════════════
+   Pronóstico real (Open-Meteo, gratis, sin llave) para Jarabacoa, junto a
+   cada pestaña de día del Itinerario — nunca en Menú, que reusa la misma
+   clase .day-tab para otras pestañas (Kit de Alimentos, Bebidas, etc.).
+   Si falla la red o la API, las pestañas se quedan exactamente como están
+   en el HTML — nunca rotas ni vacías por culpa del clima. */
+const CLIMA_FECHA_POR_DIA = { viernes: "2026-10-16", sabado: "2026-10-17", domingo: "2026-10-18" };
+const CLIMA_WMO = {
+  0: ["☀️", "Despejado"], 1: ["🌤️", "Mayormente despejado"], 2: ["⛅", "Parcialmente nublado"], 3: ["☁️", "Nublado"],
+  45: ["🌫️", "Neblina"], 48: ["🌫️", "Neblina"],
+  51: ["🌦️", "Llovizna leve"], 53: ["🌦️", "Llovizna"], 55: ["🌧️", "Llovizna fuerte"],
+  61: ["🌦️", "Lluvia leve"], 63: ["🌧️", "Lluvia"], 65: ["🌧️", "Lluvia fuerte"],
+  80: ["🌦️", "Aguaceros"], 81: ["🌧️", "Aguaceros"], 82: ["⛈️", "Aguaceros fuertes"],
+  95: ["⛈️", "Tormenta"], 96: ["⛈️", "Tormenta con granizo"], 99: ["⛈️", "Tormenta con granizo"],
+};
+
+function initClimaItinerario() {
+  const tabBar = document.querySelector('.day-tabs[data-tabgroup="itin"]');
+  if (!tabBar) return;
+
+  const url = "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=19.12&longitude=-70.63"
+    + "&daily=weathercode,temperature_2m_max,temperature_2m_min"
+    + "&timezone=America%2FSanto_Domingo&forecast_days=3";
+
+  fetch(url)
+    .then(res => { if (!res.ok) throw new Error(`Open-Meteo respondió ${res.status}`); return res.json(); })
+    .then(data => {
+      const dias = data?.daily;
+      if (!dias?.time) return;
+
+      Object.entries(CLIMA_FECHA_POR_DIA).forEach(([dia, fecha]) => {
+        const idx = dias.time.indexOf(fecha);
+        if (idx === -1) return;
+        const btn = tabBar.querySelector(`[data-day="${dia}"]`);
+        if (!btn) return;
+
+        const [icon, label] = CLIMA_WMO[dias.weathercode[idx]] || ["🌡️", ""];
+        const min = Math.round(dias.temperature_2m_min[idx]);
+        const max = Math.round(dias.temperature_2m_max[idx]);
+
+        const badge = document.createElement("span");
+        badge.className = "day-tab-clima";
+        badge.title = label;
+        badge.innerHTML = `<span class="icon">${icon}</span><span>${min}°–${max}°</span>`;
+        btn.appendChild(badge);
+      });
+    })
+    .catch(err => console.error("Error cargando el clima del itinerario:", err));
 }
 
 /* ══════════════════════════════════════════════════════════════════════
