@@ -272,37 +272,50 @@ const CLIMA_WMO = {
 
 function initClimaItinerario() {
   const tabBar = document.querySelector('.day-tabs[data-tabgroup="itin"]');
-  if (!tabBar) return;
 
   const url = "https://api.open-meteo.com/v1/forecast"
     + "?latitude=19.12&longitude=-70.63"
+    + "&current_weather=true"
     + "&daily=weathercode,temperature_2m_max,temperature_2m_min"
     + "&timezone=America%2FSanto_Domingo&forecast_days=3";
 
   fetch(url)
     .then(res => { if (!res.ok) throw new Error(`Open-Meteo respondió ${res.status}`); return res.json(); })
     .then(data => {
-      const dias = data?.daily;
-      if (!dias?.time) return;
-
-      Object.entries(CLIMA_FECHA_POR_DIA).forEach(([dia, fecha]) => {
-        const idx = dias.time.indexOf(fecha);
-        if (idx === -1) return;
-        const btn = tabBar.querySelector(`[data-day="${dia}"]`);
-        if (!btn) return;
-
-        const [icon, label] = CLIMA_WMO[dias.weathercode[idx]] || ["🌡️", ""];
-        const min = Math.round(dias.temperature_2m_min[idx]);
-        const max = Math.round(dias.temperature_2m_max[idx]);
-
-        const badge = document.createElement("span");
-        badge.className = "day-tab-clima";
-        badge.title = label;
-        badge.innerHTML = `<span class="icon">${icon}</span><span>${min}°–${max}°</span>`;
-        btn.appendChild(badge);
-      });
+      try { renderClimaActualHero(data?.current_weather); } catch (err) { console.error("Error mostrando el clima actual:", err); }
+      try { renderClimaItinerarioDias(tabBar, data?.daily); } catch (err) { console.error("Error mostrando el clima del itinerario:", err); }
     })
-    .catch(err => console.error("Error cargando el clima del itinerario:", err));
+    .catch(err => console.error("Error cargando el clima:", err));
+}
+
+function renderClimaActualHero(actual) {
+  if (!actual) return;
+  const wrap = document.getElementById("climaActualHero");
+  if (!wrap) return;
+  const [icon, label] = CLIMA_WMO[actual.weathercode] || ["🌡️", ""];
+  document.getElementById("climaActualIcon").textContent = icon;
+  document.getElementById("climaActualTemp").textContent = `${Math.round(actual.temperature)}°`;
+  document.getElementById("climaActualCond").textContent = label || "Ahora mismo en Jarabacoa";
+  wrap.style.display = "flex";
+}
+
+function renderClimaItinerarioDias(tabBar, dias) {
+  if (!tabBar || !dias?.time) return;
+  Object.entries(CLIMA_FECHA_POR_DIA).forEach(([dia, fecha]) => {
+    const idx = dias.time.indexOf(fecha);
+    if (idx === -1) return;
+    const btn = tabBar.querySelector(`[data-day="${dia}"]`);
+    if (!btn) return;
+
+    const [icon, label] = CLIMA_WMO[dias.weathercode[idx]] || ["🌡️", ""];
+    const min = Math.round(dias.temperature_2m_min[idx]);
+    const max = Math.round(dias.temperature_2m_max[idx]);
+
+    const badge = document.createElement("div");
+    badge.className = "day-tab-clima";
+    badge.innerHTML = `<span class="icon">${icon}</span><span class="cond">${label}</span><span class="temp">${min}°–${max}°</span>`;
+    btn.appendChild(badge);
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════════════
