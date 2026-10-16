@@ -30,5 +30,10 @@
   from = "/reglamento"
   to   = "/reglamento.html"
   status = 200
+
+[[redirects]]
+  from = "/musica"
+  to   = "/musica.html"
+  status = 200
 [build.environment]
   SECRETS_SCAN_OMIT_PATHS = "node_modules/@firebase/app/dist/app/src/global_index.d.ts,node_modules/@firebase/app/dist/app/src/public-types.d.ts,node_modules/@firebase/app/dist/esm/app/src/public-types.d.ts,node_modules/@firebase/firestore/dist/firestore/src/global_index.d.ts,node_modules/firebase-tools/lib/api.js,node_modules/@firebase/app/dist/app-public.d.ts,node_modules/@firebase/app/dist/app.d.ts"

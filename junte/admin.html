@@ -28,6 +28,7 @@
     <li data-gated="true" style="display:none"><a href="/#mapa">🗺️ Mapa</a></li>
     <li data-gated="true" style="display:none"><a href="/#menu">Menú</a></li>
     <li><a href="/retos">🏆 Retos</a></li>
+    <li><a href="/musica">🎵 Pide tu canción</a></li>
     <li data-gated="true" style="display:none"><a href="/#historia">Historia</a></li>
     <li><a href="/cuenta">👤 Mi Cuenta</a></li>
     <li id="navAdminLink" style="display:none"><a href="/admin" class="active-nav">🔐 Administrador</a></li>
@@ -59,9 +60,16 @@
   </div>
 
   <div id="adminContent" style="display:none">
+  <div id="adminFullOnly">
     <div class="section-header">
       <h2 class="section-title">Panel de Administrador</h2>
       <p class="section-sub">Aprueba o rechaza cuentas · Controla la galería general</p>
+    </div>
+
+    <div class="admin-settings-card">
+      <h3 style="color:var(--green-dark);margin-bottom:4px">📊 Registrados por Villa</h3>
+      <p class="account-hint" style="margin-bottom:14px">Cada familia del roster, con cuántas cuentas tiene registradas (cualquier estado) — en rojo las que todavía no tienen a nadie.</p>
+      <div id="villaResumenGrid" class="villas-grid"></div>
     </div>
 
     <div class="admin-settings-card">
@@ -205,6 +213,124 @@
       <div id="evidenciasList" class="admin-user-list"></div>
     </div>
   </div>
+  <!-- /adminFullOnly: todo lo de arriba (Usuarios + Gestión de Retos) es
+       SOLO para el admin real — nunca para el encargado de música, aunque
+       ambos entren por /admin con sesión aprobada. -->
+
+  <!-- ═══ GESTIÓN MUSICAL ═══════════════════════════════════════════════
+       Visible para el admin Y para el encargado de música — la única
+       sección de /admin a la que el encargado tiene acceso. -->
+  <div class="section-header" style="margin-top:44px">
+    <h2 class="section-title" style="font-size:1.6rem">🎵 Gestión musical</h2>
+    <p class="section-sub">Propuestas · cola · encargado · exportar</p>
+  </div>
+
+  <div class="admin-tabs" id="musicaAdminTabs">
+    <button class="admin-tab active" data-musictab="propuestas">📋 Propuestas <span class="admin-tab-count" id="tabCountMusicaProp">0</span></button>
+    <button class="admin-tab" data-musictab="cola">📻 Cola</button>
+    <button class="admin-tab" data-musictab="encargado">👤 Encargado</button>
+    <button class="admin-tab" data-musictab="ajustes">⚙️ Más</button>
+  </div>
+
+  <div class="admin-tab-panel active" id="musicaPanel-propuestas">
+    <div class="admin-settings-card">
+      <p class="account-hint" style="margin-bottom:10px">Resumen: <span id="musicaResumen">—</span></p>
+      <details>
+        <summary style="cursor:pointer;font-weight:700;color:var(--green-dark)">➕ Agregar canción directo (sin pasar por propuesta de invitados)</summary>
+        <form id="musicaAgregarForm" class="account-form" style="margin-top:10px">
+          <label>Canción</label>
+          <input type="text" id="magTitulo" class="input-inline" maxlength="150" required />
+          <label>Artista</label>
+          <input type="text" id="magArtista" class="input-inline" maxlength="120" required />
+          <label>Género</label>
+          <select id="magGenero" class="select-input" required>
+            <option value="">— Elige —</option>
+            <option value="merengue">Merengue</option>
+            <option value="bachata">Bachata</option>
+            <option value="salsa">Salsa</option>
+            <option value="tipico">Típico</option>
+            <option value="dembow">Dembow</option>
+            <option value="regueton">Reguetón</option>
+            <option value="otro">Otro</option>
+          </select>
+          <label>Enlace de Spotify (opcional)</label>
+          <input type="url" id="magSpotify" class="input-inline" />
+          <label>¿La mando directo a la cola?</label>
+          <select id="magEstado" class="select-input">
+            <option value="activa">No, que aparezca como cualquier propuesta</option>
+            <option value="en-cola">Sí, directo a la cola</option>
+          </select>
+          <p class="account-msg" id="musicaAgregarMsg"></p>
+          <button type="submit" class="btn-primary" style="width:100%;margin-top:6px">Agregar</button>
+        </form>
+      </details>
+    </div>
+    <div class="evidencia-filters">
+      <select id="musicaFiltroGenero" class="select-input">
+        <option value="">Todos los géneros</option>
+        <option value="merengue">Merengue</option>
+        <option value="bachata">Bachata</option>
+        <option value="salsa">Salsa</option>
+        <option value="tipico">Típico</option>
+        <option value="dembow">Dembow</option>
+        <option value="regueton">Reguetón</option>
+        <option value="otro">Otro</option>
+      </select>
+      <select id="musicaFiltroEstado" class="select-input">
+        <option value="">Todos los estados</option>
+        <option value="activa">🗳️ Solicitada</option>
+        <option value="en-cola">📻 En cola</option>
+        <option value="sonando">🔊 Sonando</option>
+        <option value="reproducida">✅ Reproducida</option>
+      </select>
+      <button class="btn-secondary" id="btnExportarCsv" type="button">⬇️ Exportar CSV</button>
+    </div>
+    <div id="musicaPropuestasList" class="admin-user-list"></div>
+  </div>
+
+  <div class="admin-tab-panel" id="musicaPanel-cola">
+    <p class="account-hint" style="margin-bottom:14px">Arrastra el orden escribiendo el número — menor número suena primero. Solo una puede estar "Sonando" a la vez.</p>
+    <div id="musicaColaList" class="admin-user-list"></div>
+  </div>
+
+  <div class="admin-tab-panel" id="musicaPanel-encargado">
+    <p class="account-hint" style="margin-bottom:14px">El encargado puede moderar propuestas, votos y la cola — no tiene acceso a Usuarios ni a Gestión de Retos.</p>
+    <div class="admin-settings-card">
+      <div class="capitan-actual" id="encargadoActual">— Sin encargado asignado —</div>
+      <select class="select-input" id="encargadoSelect" style="margin-top:10px"></select>
+      <div class="capitan-card-actions" style="margin-top:10px">
+        <button class="btn-admin-sm" id="btnAsignarEncargado">Asignar</button>
+        <button class="btn-admin-sm danger" id="btnRetirarEncargado">Retirar</button>
+      </div>
+      <p class="account-msg" id="encargadoMsg"></p>
+    </div>
+  </div>
+
+  <div class="admin-tab-panel" id="musicaPanel-ajustes">
+    <div class="admin-settings-card">
+      <label class="switch-row">
+        <input type="checkbox" id="pausarPropuestas" />
+        <span>Pausar propuestas nuevas (los invitados ya no pueden proponer canciones)</span>
+      </label>
+      <label class="switch-row" style="margin-top:10px">
+        <input type="checkbox" id="pausarVotacion" />
+        <span>Pausar votación (nadie puede votar ni retirar su voto)</span>
+      </label>
+      <p class="account-msg" id="musicaPausasMsg"></p>
+    </div>
+    <div class="admin-settings-card">
+      <h3 style="color:var(--green-dark);margin-bottom:10px">🔀 Fusionar duplicados</h3>
+      <p class="account-hint" style="margin-bottom:10px">Si dos propuestas son la misma canción, escribe el ID de la que se queda y el de la que desaparece — sus votos se mueven a la primera (máximo un voto por familia/persona) y la segunda se borra.</p>
+      <input type="text" id="fusionConservar" class="input-inline" placeholder="ID a conservar" />
+      <input type="text" id="fusionBorrar" class="input-inline" placeholder="ID a borrar" style="margin-top:8px" />
+      <p class="account-msg" id="fusionMsg"></p>
+      <button class="btn-primary" id="btnFusionar" style="width:100%;margin-top:8px">Fusionar</button>
+    </div>
+    <div class="admin-settings-card">
+      <h3 style="color:var(--green-dark);margin-bottom:10px">🗒️ Historial de moderación</h3>
+      <div id="musicaHistorialList" class="admin-user-list"></div>
+    </div>
+  </div>
 </section>
 
 <!-- Firebase SDK -->
@@ -217,5 +343,6 @@
 <script src="static/js/families-roster.js"></script>
 <script src="static/js/nav.js"></script>
 <script src="static/js/admin.js"></script>
+<script src="static/js/musica-admin.js"></script>
 </body>
 </html>

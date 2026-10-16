@@ -328,6 +328,11 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .villa-familia-item { display: flex; align-items: center; gap: 8px; font-size: .88rem; }
 .villa-familia-item::before { content: '👤'; font-size: .8rem; flex-shrink: 0; }
 .familia-nombre { flex: 1; }
+.familia-stats {
+  font-size: .72rem; color: var(--text-mid); white-space: nowrap; flex-shrink: 0;
+  display: flex; align-items: center; gap: 5px;
+}
+.familia-stats .familia-badge { font-size: .85rem; }
 .familia-hab-badge { background: #f0f0f0; border-radius: 10px; padding: 2px 8px; font-size: .75rem; color: var(--text-mid); font-weight: 600; white-space: nowrap; }
 .familia-hab-input { width: 70px; border: 1px solid #ddd; border-radius: 6px; padding: 3px 6px; font-size: .78rem; outline: none; }
 .familia-hab-input:focus { border-color: var(--green-mid); }
@@ -1032,6 +1037,19 @@ body.nav-open-lock {
 .capitan-card-actions { display: flex; gap: 6px; width: 100%; }
 .capitan-card-actions button { flex: 1; }
 
+.villa-resumen-lista { list-style: none; width: 100%; text-align: left; }
+.villa-resumen-fila {
+  display: flex; justify-content: space-between; gap: 8px; font-size: .82rem;
+  padding: 4px 0; border-bottom: 1px solid #f0f0f0; color: var(--text-dark);
+}
+.villa-resumen-fila strong { color: var(--green-mid); font-family: 'Montserrat', sans-serif; }
+.villa-resumen-fila.sin-registrar { color: #c62828; }
+.villa-resumen-fila.sin-registrar strong { color: #c62828; }
+.villa-resumen-total {
+  width: 100%; text-align: right; font-family: 'Montserrat', sans-serif; font-weight: 900;
+  color: var(--green-dark); padding-top: 6px; font-size: .95rem;
+}
+
 /* ─── Panel admin: Publicar reto ────────────────────────────────────────── */
 .reto-villa-checks { display: flex; flex-direction: column; gap: 8px; background: #f8f8f8; border-radius: var(--radius-sm); padding: 12px 14px; }
 .reto-villa-checks label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; color: var(--text-dark); text-transform: none; letter-spacing: 0; }
@@ -1142,4 +1160,67 @@ body.nav-open-lock {
   margin-top: 16px; padding-top: 14px; border-top: 2px dashed #eee;
   text-align: center; font-family: 'Montserrat', sans-serif; font-weight: 700;
   color: var(--gold-dark); font-size: .9rem;
+}
+
+/* ══════════════════ "Pide tu canción" ══════════════════════════════════ */
+.musica-filtros {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  margin: 0 auto 18px; max-width: 900px;
+}
+.musica-filtros .input-inline, .musica-filtros .select-input { flex: 1; min-width: 160px; }
+
+.musica-vistas {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin: 0 auto 24px; max-width: 900px;
+}
+
+.cancion-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px; max-width: 1100px; margin: 0 auto;
+}
+
+.cancion-card {
+  background: var(--white); border-radius: var(--radius); padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06); display: flex; flex-direction: column;
+}
+.cancion-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.cancion-genero-tag {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .7rem;
+  color: var(--green-dark); background: var(--off-white); border: 1px solid #ddd;
+  border-radius: 12px; padding: 3px 10px;
+}
+.cancion-badge {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .7rem;
+  border-radius: 12px; padding: 3px 10px; white-space: nowrap;
+}
+.cancion-badge-activa      { background: #E8F5E9; color: var(--green-mid); }
+.cancion-badge-en-cola     { background: #FFF8E1; color: var(--gold-dark); }
+.cancion-badge-sonando     { background: #FFEBEE; color: #c62828; }
+.cancion-badge-reproducida { background: #f0f0f0; color: var(--text-mid); }
+
+.cancion-titulo  { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.05rem; color: var(--text-dark); margin-bottom: 2px; }
+.cancion-artista { font-size: .9rem; color: var(--text-mid); margin-bottom: 8px; }
+.cancion-propone { font-size: .8rem; color: var(--text-mid); margin-bottom: 6px; }
+.cancion-dedicatoria { font-size: .82rem; color: var(--green-dark); font-style: italic; margin-bottom: 8px; }
+.cancion-etiqueta {
+  display: inline-block; font-size: .7rem; font-weight: 700; border-radius: 10px;
+  padding: 2px 8px; margin-bottom: 8px; font-family: 'Montserrat', sans-serif;
+}
+.cancion-etiqueta.revision { background: #FFF3E0; color: #e65100; }
+.cancion-etiqueta.limpia   { background: #E8F5E9; color: var(--green-mid); }
+
+.cancion-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; flex-wrap: wrap; }
+.cancion-vote-btn {
+  background: var(--green-dark); color: var(--white); border: none; border-radius: 20px;
+  padding: 8px 16px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .82rem;
+  cursor: pointer; transition: var(--transition);
+}
+.cancion-vote-btn:hover:not(:disabled) { background: var(--green-mid); }
+.cancion-vote-btn.voted { background: var(--gold); color: var(--text-dark); }
+.cancion-vote-btn:disabled { background: #ddd; color: #999; cursor: not-allowed; }
+.cancion-votos-total { font-size: .78rem; color: var(--text-mid); font-weight: 600; }
+
+@media (max-width: 480px) {
+  .cancion-grid { grid-template-columns: 1fr; }
+  .musica-filtros .input-inline, .musica-filtros .select-input { min-width: 100%; }
 }

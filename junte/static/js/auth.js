@@ -11,6 +11,7 @@ const JunteAuth = (() => {
 
   let listeners = [];
   let profileUnsub = null;
+  let activityPinged = false; // una sola vez por sesión, no en cada snapshot del perfil
   let state = {
     loading: true,
     user: null,
@@ -18,6 +19,7 @@ const JunteAuth = (() => {
     isAdmin: false,
     isApproved: false,
     capitanVilla: null,  // slug de villa, o null — viene del custom claim
+    encargadoMusica: false, // viene del custom claim, igual que capitanVilla
   };
 
   function slugify(s) {
@@ -52,6 +54,22 @@ const JunteAuth = (() => {
         state.profile = snap.exists ? snap.data() : null;
         computeDerived();
         notify();
+        if (!activityPinged && state.profile?.familia) {
+          activityPinged = true;
+          const famSlug = state.profile.familia;
+          const famRef = fbDb.collection("familiaRegistros").doc(famSlug);
+          // Si el doc no existe todavía (cuenta creada antes de esta
+          // función, o familia aún sin "seedear"), no intentamos crearlo a
+          // medias desde aquí — las reglas lo rechazarían de cualquier
+          // forma porque nos falta el conteo real. Eso lo arregla el
+          // backfill del admin (scripts/backfill-familia-registros.js),
+          // que sí conoce el conteo verdadero de todos los registrados.
+          famRef.get().then(snap => {
+            if (snap.exists) {
+              return famRef.set({ ultimaActividad: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            }
+          }).catch(err => console.error("No se pudo actualizar ultimaActividad:", err));
+        }
       },
       err => console.error("Perfil error:", err)
     );
@@ -62,7 +80,8 @@ const JunteAuth = (() => {
     if (profileUnsub) { profileUnsub(); profileUnsub = null; }
 
     if (!user) {
-      state = { loading: false, user: null, profile: null, isAdmin: false, isApproved: false, capitanVilla: null };
+      state = { loading: false, user: null, profile: null, isAdmin: false, isApproved: false, capitanVilla: null, encargadoMusica: false };
+      activityPinged = false;
       notify();
       return;
     }
@@ -72,10 +91,12 @@ const JunteAuth = (() => {
       const tokenResult = await user.getIdTokenResult();
       state.isAdmin = tokenResult.claims.admin === true;
       state.capitanVilla = tokenResult.claims.capitanVilla || null;
+      state.encargadoMusica = tokenResult.claims.encargadoMusica === true;
     } catch (err) {
       console.error("Token claims error:", err);
       state.isAdmin = false;
       state.capitanVilla = null;
+      state.encargadoMusica = false;
     }
     computeDerived();
     notify();
@@ -91,6 +112,7 @@ const JunteAuth = (() => {
       const tokenResult = await fbAuth.currentUser.getIdTokenResult(true);
       state.isAdmin = tokenResult.claims.admin === true;
       state.capitanVilla = tokenResult.claims.capitanVilla || null;
+      state.encargadoMusica = tokenResult.claims.encargadoMusica === true;
       computeDerived();
       notify();
     } catch (err) {
@@ -135,6 +157,14 @@ const JunteAuth = (() => {
       throw new Error(friendlyError(err));
     }
 
+    // Esta cuenta recién creada ya se autentica sola (dispara
+    // onAuthStateChanged → watchProfile en paralelo con lo que sigue aquí
+    // abajo) — avisamos que el "ping" de actividad de esta sesión ya lo
+    // mandamos nosotros mismos más abajo, para que watchProfile no intente
+    // el suyo al mismo tiempo y choquen los dos escribiendo el mismo doc
+    // nuevo (uno con 'registrados', el otro sin ese campo).
+    activityPinged = true;
+
     const familiaSlug = slugify(familiaLabel);
     await fbDb.collection("users").doc(cred.user.uid).set({
       nombre,
@@ -145,6 +175,18 @@ const JunteAuth = (() => {
       status: "pending",
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
+    // Mejor esfuerzo: suma 1 al conteo público de "Registrados" de esta
+    // familia (se ve en Nuestras Villas). Si esto falla por lo que sea,
+    // nunca debe tumbar el registro real de arriba, que ya quedó guardado.
+    try {
+      await fbDb.collection("familiaRegistros").doc(familiaSlug).set({
+        registrados: firebase.firestore.FieldValue.increment(1),
+        ultimaActividad: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (err) {
+      console.error("No se pudo actualizar familiaRegistros:", err);
+    }
 
     return cred.user;
   }

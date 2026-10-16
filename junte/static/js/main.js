@@ -14,6 +14,7 @@ let authState  = { loading: true };
 let muralCache = {};            // { "<familiaSlug>_<anio>": {...doc} }
 let galleryEnabled = false;
 let muralUnsub = null, settingsUnsub = null;
+let familiaStatsUnsub = null;
 
 let uploadTargetAnio    = null;
 let selectedFile        = null;
@@ -50,7 +51,7 @@ function onAuthState(state) {
     document.querySelectorAll(".editable").forEach(el => el.contentEditable = adminMode ? "true" : "false");
   } catch (err) { console.error("Error en onAuthState (admin UI):", err); }
 
-  for (const fn of [watchSettings, watchMural, renderMuralGate, renderMuralGrid, renderLoggedOutGate]) {
+  for (const fn of [watchSettings, watchMural, renderMuralGate, renderMuralGrid, renderLoggedOutGate, watchFamiliaStats]) {
     try { fn(); } catch (err) { console.error(`Error en onAuthState (${fn.name}):`, err); }
   }
 }
@@ -157,6 +158,52 @@ function applyVillaImagenHome(slug, data) {
     photo.style.display = "none";
     icon.style.display = "";
   }
+}
+
+/* ══════════════════ REGISTRADOS Y ACTIVIDAD POR FAMILIA ═══════════════════
+   Junto a cada nombre en "Nuestras Villas": cuántas cuentas hay registradas
+   en esa familia y una insignia de actividad reciente — nunca un conteo
+   exacto de fotos/votos de nadie, solo esta señal gruesa. Visible para
+   cualquiera con cuenta (mismo nivel que el resto de esta sección), nunca
+   para visitantes sin registrar. Si falla la lectura, cada <li> se queda
+   tal cual está en el HTML (sin esa info extra), nunca en blanco. */
+const DIAS_ACTIVIDAD_RECIENTE = 14;
+
+function watchFamiliaStats() {
+  if (typeof fbDb === "undefined") return;
+  if (familiaStatsUnsub) { familiaStatsUnsub(); familiaStatsUnsub = null; }
+  if (!authState.user) return; // requiere cuenta — se vuelve a llamar solo cuando cambie el estado de sesión
+  familiaStatsUnsub = fbDb.collection("familiaRegistros").onSnapshot(
+    snap => {
+      const porFamilia = {};
+      snap.forEach(doc => { porFamilia[doc.id] = doc.data(); });
+      try { renderFamiliaStats(porFamilia); } catch (err) { console.error("Error mostrando estadísticas de familias:", err); }
+    },
+    err => console.error("Error leyendo estadísticas de familias:", err)
+  );
+}
+
+function renderFamiliaStats(porFamilia) {
+  document.querySelectorAll(".villa-familia-item[data-familia]").forEach(li => {
+    const slug = li.dataset.familia;
+    const span = li.querySelector("[data-stats]");
+    if (!span) return;
+    const datos = porFamilia[slug];
+
+    if (!datos || !datos.registrados) {
+      span.innerHTML = `<span class="familia-badge" title="Nadie de esta familia se ha registrado todavía">⚪</span>`;
+      return;
+    }
+
+    const registrados = datos.registrados;
+    const ultima = datos.ultimaActividad?.toDate ? datos.ultimaActividad.toDate() : null;
+    const diasDesde = ultima ? (Date.now() - ultima.getTime()) / 86400000 : Infinity;
+    const badge = diasDesde <= DIAS_ACTIVIDAD_RECIENTE
+      ? `<span class="familia-badge" title="Activa recientemente">🟢</span>`
+      : `<span class="familia-badge" title="Registrada, sin actividad reciente">🟡</span>`;
+
+    span.innerHTML = `${badge}<span>👥 ${registrados}</span>`;
+  });
 }
 
 function initVillaPhotoZoom() {

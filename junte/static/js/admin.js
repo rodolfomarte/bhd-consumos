@@ -6,6 +6,7 @@
 let usersUnsub = null;
 let storagePollTimer = null;
 let approvedUsersCache = [];
+let allUsersCache = [];
 let captainsUnsub = null, captainsCache = {};
 let retosAdminUnsub = {}, retosAdminCache = {};
 let evidenciasUnsub = null;
@@ -22,12 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("adminLoading").style.display = state.loading ? "block" : "none";
     if (state.loading) return;
 
-    const loggedOut  = !state.user;
-    const authorized = state.isAdmin;
+    const loggedOut      = !state.user;
+    const authorized     = state.isAdmin;                        // panel completo
+    const authorizedMusic = state.isAdmin || state.encargadoMusica; // solo "Gestión musical"
 
     document.getElementById("adminLoginWrap").style.display = loggedOut ? "block" : "none";
-    document.getElementById("adminDenied").style.display    = (!loggedOut && !authorized) ? "block" : "none";
-    document.getElementById("adminContent").style.display   = authorized ? "block" : "none";
+    document.getElementById("adminDenied").style.display    = (!loggedOut && !authorizedMusic) ? "block" : "none";
+    document.getElementById("adminContent").style.display   = authorizedMusic ? "block" : "none";
+    document.getElementById("adminFullOnly").style.display  = authorized ? "block" : "none";
 
     if (authorized && !usersUnsub) {
       initGalleryToggle();
@@ -45,6 +48,15 @@ document.addEventListener("DOMContentLoaded", () => {
       Object.values(retosAdminUnsub).forEach(fn => fn && fn());
       retosAdminUnsub = {};
       if (evidenciasUnsub) { evidenciasUnsub(); evidenciasUnsub = null; }
+    }
+
+    if (authorizedMusic && !window.__musicaAdminStarted) {
+      window.__musicaAdminStarted = true;
+      try { initMusicaAdmin(); } catch (err) { console.error("Error iniciando Gestión musical:", err); }
+    }
+    if (!authorizedMusic && window.__musicaAdminStarted) {
+      window.__musicaAdminStarted = false;
+      try { teardownMusicaAdmin(); } catch (err) { console.error("Error cerrando Gestión musical:", err); }
     }
   });
 
@@ -162,14 +174,57 @@ function watchUsers() {
   usersUnsub = fbDb.collection("users").orderBy("createdAt", "desc").onSnapshot(
     snap => {
       const byStatus = { pending: [], approved: [], rejected: [], suspended: [] };
+      allUsersCache = [];
       snap.forEach(doc => {
         const u = { uid: doc.id, ...doc.data() };
         (byStatus[u.status] || byStatus.pending).push(u);
+        allUsersCache.push(u);
       });
       Object.entries(byStatus).forEach(([status, list]) => renderGroup(status, list));
+      try { renderVillaResumen(); } catch (err) { console.error("Error en resumen por villa:", err); }
     },
     err => console.error("Users error:", err)
   );
+}
+
+/* ── Resumen: cuántos registrados hay por familia/villa ──────────────────
+   Recorre el roster completo (las 24 familias conocidas, vengan o no
+   registradas) y cuenta cuántas cuentas reales hay por cada una — en
+   cualquier estado (pendiente/aprobado/rechazado/suspendido), porque la
+   pregunta es "¿alguien de esa familia se registró?", no "¿ya se aprobó?".
+   Las familias en 0 se marcan en rojo para verlas de un vistazo. */
+function renderVillaResumen() {
+  const wrap = document.getElementById("villaResumenGrid");
+  if (!wrap || typeof FAMILIES_ROSTER === "undefined") return;
+
+  const countPorFamilia = {};
+  allUsersCache.forEach(u => {
+    if (!u.familia) return;
+    countPorFamilia[u.familia] = (countPorFamilia[u.familia] || 0) + 1;
+  });
+
+  wrap.innerHTML = FAMILIES_ROSTER.map((villa, idx) => {
+    const villaInfo = VILLAS[idx] || { icon: "", name: villa.name };
+    let totalVilla = 0;
+    const filas = villa.familias.map(f => {
+      const slug = JunteAuth.slugify(f.nombre);
+      const n = countPorFamilia[slug] || 0;
+      totalVilla += n;
+      return `
+        <li class="villa-resumen-fila ${n === 0 ? "sin-registrar" : ""}">
+          <span>${escAdmin(f.nombre)}</span>
+          <strong>${n}</strong>
+        </li>`;
+    }).join("");
+
+    return `
+      <div class="capitan-card">
+        <div class="villa-icon">${villaInfo.icon}</div>
+        <div class="villa-name">${escAdmin(villa.name)}</div>
+        <ul class="villa-resumen-lista">${filas}</ul>
+        <div class="villa-resumen-total">Total: <strong>${totalVilla}</strong></div>
+      </div>`;
+  }).join("");
 }
 
 function renderGroup(status, list) {
@@ -186,17 +241,21 @@ function renderGroup(status, list) {
     return;
   }
 
-  wrap.innerHTML = list.map(u => `
+  wrap.innerHTML = list.map(u => {
+    const villaSlug = villaSlugForFamilia(u.familia);
+    const villaInfo = VILLAS.find(v => v.slug === villaSlug);
+    return `
     <div class="admin-user-card">
       <div class="admin-user-info">
         <strong>${escAdmin(u.nombre)}</strong>
-        <span>${escAdmin(u.familiaLabel || u.familia)}</span>
+        <span>${escAdmin(u.familiaLabel || u.familia)}${villaInfo ? ` · ${villaInfo.icon} ${escAdmin(villaInfo.name)}` : ""}</span>
         <span class="admin-user-email">${escAdmin(u.email)}</span>
       </div>
       <div class="admin-user-actions">
         ${renderActions(status, u.uid)}
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   wrap.querySelectorAll("[data-action]").forEach(btn => {
     btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.uid, btn));

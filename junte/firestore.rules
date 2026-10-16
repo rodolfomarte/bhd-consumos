@@ -34,6 +34,19 @@ service cloud.firestore {
     function isCaptainOfVilla(villa) {
       return isApproved() && ('capitanVilla' in request.auth.token) && request.auth.token.capitanVilla == villa;
     }
+    // Mirrored onto the Auth custom claims by netlify/functions/set-music-manager.js
+    // (same pattern as capitanVilla) — a single module-wide role, not per-villa.
+    function isMusicManager() {
+      return isApproved() && ('encargadoMusica' in request.auth.token) && request.auth.token.encargadoMusica == true;
+    }
+    function propuestasPausadas() {
+      return exists(/databases/$(database)/documents/config/musica)
+        && get(/databases/$(database)/documents/config/musica).data.propuestasPausadas == true;
+    }
+    function votacionPausada() {
+      return exists(/databases/$(database)/documents/config/musica)
+        && get(/databases/$(database)/documents/config/musica).data.votacionPausada == true;
+    }
 
     /* ───────────── users/{uid} ─────────────
        Self-registration only creates a "pending" profile. Nobody can set
@@ -236,6 +249,138 @@ service cloud.firestore {
     match /villaPuntosAjustes/{autoId} {
       allow read: if isAdmin() || isApproved();
       allow write: if isAdmin();
+    }
+
+    /* ─────────────── familiaRegistros/{familiaSlug} ─────────────────────
+       Conteo de cuentas registradas por familia + última vez que alguien
+       de esa familia entró — se muestra junto a cada familia en la sección
+       pública "Nuestras Villas" (visible a cualquiera con cuenta, igual
+       que esa sección, no hace falta estar aprobado). Cada quien solo
+       puede tocar el doc de SU PROPIA familia, y solo de dos formas:
+       sumar exactamente 1 a "registrados" (una vez, al crear su cuenta) o
+       actualizar "ultimaActividad" a ahora (cada vez que inicia sesión) —
+       nunca puede tocar el conteo de otra familia ni inventarse un salto
+       mayor a 1. */
+    match /familiaRegistros/{familiaSlug} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn() && myFamilia() == familiaSlug
+        && request.resource.data.keys().hasOnly(['registrados', 'ultimaActividad'])
+        && request.resource.data.registrados == 1;
+
+      allow update: if isSignedIn() && myFamilia() == familiaSlug
+        && request.resource.data.keys().hasOnly(['registrados', 'ultimaActividad'])
+        && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimaActividad'])
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registrados', 'ultimaActividad'])
+              && request.resource.data.registrados == resource.data.registrados + 1)
+        );
+    }
+
+    /* ═══════════════════ "Pide tu canción" ═══════════════════════════════
+       cancionesPedidas: una propuesta por doc. Se publican de inmediato
+       (sin aprobación previa, decisión explícita del admin) — la única
+       moderación es que admin/encargado puedan borrarla o editarla después.
+       Los votos viven aparte (cancionVotos) para que los conteos salgan de
+       documentos reales, nunca de un contador que el cliente pueda falsear,
+       y para que el propio ID del documento ("<cancionId>_<uid>") le impida
+       a Firestore crear un segundo voto de la misma persona aunque dos
+       pestañas intenten votar al mismo tiempo (un "create" solo tiene éxito
+       si el documento no existía). */
+    match /cancionesPedidas/{cancionId} {
+      allow read: if isAdmin() || isApproved();
+
+      allow create: if request.resource.data.keys().hasOnly(
+            ['titulo','artista','generoSlug','spotifyUrl','dedicatoria','familia','nombre','uid','estado','ocultaInapropiado','etiquetaContenido','ordenCola','creadoEn'])
+        && request.resource.data.titulo is string && request.resource.data.titulo.size() > 0 && request.resource.data.titulo.size() <= 150
+        && request.resource.data.artista is string && request.resource.data.artista.size() > 0 && request.resource.data.artista.size() <= 120
+        && request.resource.data.generoSlug in ['merengue','bachata','salsa','tipico','dembow','regueton','otro']
+        && request.resource.data.spotifyUrl is string && request.resource.data.spotifyUrl.size() <= 300
+        && request.resource.data.dedicatoria is string && request.resource.data.dedicatoria.size() <= 150
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.ocultaInapropiado == false
+        && request.resource.data.etiquetaContenido in ['', 'requiere-revision', 'version-limpia-verificada']
+        && request.resource.data.ordenCola == 0
+        && (
+          // Propuesta de un invitado aprobado — atribuida a su propia familia real.
+          // (el encargado/admin SIEMPRE puede agregar directo, aunque las
+          // propuestas públicas estén pausadas — por eso esta pausa solo
+          // aplica a esta rama, nunca a la de "Organización" de abajo.)
+          (isApproved() && !propuestasPausadas()
+            && request.resource.data.familia == myFamilia()
+            && request.resource.data.nombre == myUserDoc().data.nombre
+            && request.resource.data.estado == 'activa')
+          ||
+          // Agregada directo a la cola por el admin/encargado — se identifica
+          // como "Organización", nunca suplanta a una familia real.
+          ((isAdmin() || isMusicManager())
+            && request.resource.data.familia == 'organizacion'
+            && request.resource.data.nombre == 'Organización'
+            && request.resource.data.estado in ['activa', 'en-cola'])
+        );
+
+      // Solo admin/encargado moderan — nunca cambian a quién pertenece la
+      // propuesta (familia/uid/nombre quedan fijos para siempre).
+      allow update: if (isAdmin() || isMusicManager())
+        && request.resource.data.familia == resource.data.familia
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.nombre == resource.data.nombre;
+
+      allow delete: if isAdmin() || isMusicManager();
+    }
+
+    match /cancionVotos/{voteId} {
+      allow read: if isAdmin() || isApproved();
+
+      // El voto normal solo lo crea la propia persona, para sí misma. El
+      // admin/encargado tiene un segundo camino SOLO para fusionar
+      // duplicados (mover el voto de alguien de la canción que desaparece
+      // a la que se conserva) — nunca puede inventar un voto de la nada
+      // con un uid cualquiera porque esa escritura solo ocurre al mover un
+      // voto que ya existía (ver initMusicaFusion en musica-admin.js).
+      allow create: if request.resource.data.keys().hasOnly(['cancionId','uid','familia','creadoEn'])
+        && request.resource.data.cancionId is string
+        && voteId == request.resource.data.cancionId + '_' + request.resource.data.uid
+        && exists(/databases/$(database)/documents/cancionesPedidas/$(request.resource.data.cancionId))
+        && get(/databases/$(database)/documents/cancionesPedidas/$(request.resource.data.cancionId)).data.estado != 'reproducida'
+        && (
+          (isApproved() && !votacionPausada()
+            && request.resource.data.uid == request.auth.uid
+            && request.resource.data.familia == myFamilia())
+          || isAdmin() || isMusicManager()
+        );
+
+      allow delete: if isAdmin() || isMusicManager()
+        || (isApproved() && resource.data.uid == request.auth.uid);
+    }
+
+    /* Bitácora de moderación — de solo lectura/escritura para quien modera,
+       nunca editable ni borrable (historial honesto). */
+    match /cancionModeracionLog/{autoId} {
+      allow read: if isAdmin() || isMusicManager();
+      allow create: if (isAdmin() || isMusicManager())
+        && request.resource.data.keys().hasOnly(['accion','cancionId','titulo','detalle','uid','creadoEn'])
+        && request.resource.data.uid == request.auth.uid;
+    }
+
+    /* Pausar propuestas/votación — el admin siempre, y también el
+       encargado (es operación del día a día, no "configurar el módulo"). */
+    match /config/musica {
+      allow write: if isAdmin() || isMusicManager();
+    }
+
+    /* Singleton "qué canción está Sonando ahora mismo". Se escribe SIEMPRE
+       dentro de una transacción de Firestore (ver marcarSonandoAtomico en
+       musica-admin.js) junto con el update de estado de la canción vieja y
+       la nueva — Firestore garantiza que esa transacción es serializable,
+       así que dos administradores marcando "Sonando" al mismo tiempo nunca
+       dejan dos canciones en ese estado: la segunda transacción se reintenta
+       automáticamente sobre el resultado ya commiteado de la primera. */
+    match /config/cancionSonando {
+      allow read: if isAdmin() || isApproved();
+      allow write: if (isAdmin() || isMusicManager())
+        && request.resource.data.keys().hasOnly(['cancionId', 'actualizadoEn', 'actualizadoPor'])
+        && request.resource.data.actualizadoPor == request.auth.uid;
     }
   }
 }

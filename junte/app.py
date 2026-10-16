@@ -26,5 +26,9 @@ def retos():
 def reglamento():
     return render_template("reglamento.html")
 
+@app.route("/musica")
+def musica():
+    return render_template("musica.html")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
