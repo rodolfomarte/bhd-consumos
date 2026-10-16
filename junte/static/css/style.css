@@ -333,6 +333,15 @@ button:disabled { opacity: .6; cursor: not-allowed; }
   display: flex; align-items: center; gap: 5px;
 }
 .familia-stats .familia-badge { font-size: .85rem; }
+.villas-gran-total {
+  font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--gold-dark);
+  font-size: .95rem; margin-top: 6px;
+}
+.villa-card-total {
+  margin-top: 12px; padding-top: 10px; border-top: 1px dashed #ddd;
+  text-align: right; font-family: 'Montserrat', sans-serif; font-weight: 900;
+  color: var(--green-dark); font-size: .85rem;
+}
 .familia-hab-badge { background: #f0f0f0; border-radius: 10px; padding: 2px 8px; font-size: .75rem; color: var(--text-mid); font-weight: 600; white-space: nowrap; }
 .familia-hab-input { width: 70px; border: 1px solid #ddd; border-radius: 6px; padding: 3px 6px; font-size: .78rem; outline: none; }
 .familia-hab-input:focus { border-color: var(--green-mid); }

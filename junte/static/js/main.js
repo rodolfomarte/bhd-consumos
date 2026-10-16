@@ -184,26 +184,40 @@ function watchFamiliaStats() {
 }
 
 function renderFamiliaStats(porFamilia) {
-  document.querySelectorAll(".villa-familia-item[data-familia]").forEach(li => {
-    const slug = li.dataset.familia;
-    const span = li.querySelector("[data-stats]");
-    if (!span) return;
-    const datos = porFamilia[slug];
+  document.querySelectorAll(".villa-card[data-villa]").forEach(card => {
+    let totalVilla = 0;
 
-    if (!datos || !datos.registrados) {
-      span.innerHTML = `<span class="familia-badge" title="Nadie de esta familia se ha registrado todavía">⚪</span>`;
-      return;
-    }
+    card.querySelectorAll(".villa-familia-item[data-familia]").forEach(li => {
+      const slug = li.dataset.familia;
+      const span = li.querySelector("[data-stats]");
+      const datos = porFamilia[slug];
+      const registrados = datos?.registrados || 0;
+      totalVilla += registrados;
+      if (!span) return;
 
-    const registrados = datos.registrados;
-    const ultima = datos.ultimaActividad?.toDate ? datos.ultimaActividad.toDate() : null;
-    const diasDesde = ultima ? (Date.now() - ultima.getTime()) / 86400000 : Infinity;
-    const badge = diasDesde <= DIAS_ACTIVIDAD_RECIENTE
-      ? `<span class="familia-badge" title="Activa recientemente">🟢</span>`
-      : `<span class="familia-badge" title="Registrada, sin actividad reciente">🟡</span>`;
+      if (!registrados) {
+        span.innerHTML = `<span class="familia-badge" title="Nadie de esta familia se ha registrado todavía">⚪</span>`;
+        return;
+      }
 
-    span.innerHTML = `${badge}<span>👥 ${registrados}</span>`;
+      const ultima = datos.ultimaActividad?.toDate ? datos.ultimaActividad.toDate() : null;
+      const diasDesde = ultima ? (Date.now() - ultima.getTime()) / 86400000 : Infinity;
+      const badge = diasDesde <= DIAS_ACTIVIDAD_RECIENTE
+        ? `<span class="familia-badge" title="Activa recientemente">🟢</span>`
+        : `<span class="familia-badge" title="Registrada, sin actividad reciente">🟡</span>`;
+
+      span.innerHTML = `${badge}<span>👥 ${registrados}</span>`;
+    });
+
+    const totalEl = card.querySelector('[data-role="villa-total"]');
+    if (totalEl) totalEl.textContent = `Total villa: ${totalVilla}`;
   });
+
+  const granTotalEl = document.getElementById("villasGranTotal");
+  if (granTotalEl) {
+    const granTotal = Object.values(porFamilia).reduce((sum, d) => sum + (d.registrados || 0), 0);
+    granTotalEl.textContent = `👥 Total registrados en el Junte: ${granTotal}`;
+  }
 }
 
 function initVillaPhotoZoom() {
