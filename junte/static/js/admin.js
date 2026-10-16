@@ -216,6 +216,9 @@ function renderVillaResumen() {
   const wrap = document.getElementById("villaResumenGrid");
   if (!wrap || typeof FAMILIES_ROSTER === "undefined") return;
 
+  const granTotal = document.getElementById("villaResumenGranTotal");
+  if (granTotal) granTotal.textContent = `Total registrados en la aplicación: ${allUsersCache.length}`;
+
   const countPorFamilia = {};
   allUsersCache.forEach(u => {
     if (!u.familia) return;
