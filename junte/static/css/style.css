@@ -1110,3 +1110,15 @@ body.nav-open-lock {
 }
 .year-gallery-item:hover img { transform: scale(1.04); }
 .year-gallery-item span { display: block; font-size: .78rem; color: var(--text-mid); margin-top: 6px; }
+
+/* ─── Reglamento General de Retos ────────────────────────────────────────── */
+.info-list.plain.reglamento-list li { display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.reglamento-situacion { flex: 1; }
+.reglamento-valor { font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.reglamento-valor.penalty { color: #c62828; }
+.reglamento-valor.bonus { color: var(--green-mid); }
+.reglamento-formula {
+  margin-top: 16px; padding-top: 14px; border-top: 2px dashed #eee;
+  text-align: center; font-family: 'Montserrat', sans-serif; font-weight: 700;
+  color: var(--gold-dark); font-size: .9rem;
+}

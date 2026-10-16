@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reglamento de Retos · Junte Familiar CND 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-brand">
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <span class="nav-logo-text">CND</span>
+      <span class="nav-divider">|</span>
+      <span class="nav-title">Junte Familiar 2026</span>
+    </a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">&#9776;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/">Inicio</a></li>
+    <li><a href="/#mural">Mural</a></li>
+    <li><a href="/live">📸 Live</a></li>
+    <li data-gated="true" style="display:none"><a href="/#itinerario">Itinerario</a></li>
+    <li data-gated="true" style="display:none"><a href="/#villas">Villas</a></li>
+    <li data-gated="true" style="display:none"><a href="/#mapa">🗺️ Mapa</a></li>
+    <li data-gated="true" style="display:none"><a href="/#menu">Menú</a></li>
+    <li><a href="/retos" class="active-nav">🏆 Retos</a></li>
+    <li data-gated="true" style="display:none"><a href="/#historia">Historia</a></li>
+    <li><a href="/cuenta">👤 Mi Cuenta</a></li>
+    <li id="navAdminLink" style="display:none"><a href="/admin">🔐 Administrador</a></li>
+  </ul>
+</nav>
+
+<section class="section retos-hero-section">
+  <div class="section-header">
+    <h2 class="section-title">📋 Reglamento General de Retos</h2>
+    <p class="section-sub gold" style="font-weight:700">Junte Familiar de Logística 2026</p>
+  </div>
+  <p class="retos-intro">
+    72 participantes · 5 equipos (uno por villa) · 7 retos.<br />
+    Objetivo: integrarnos, divertirnos y fortalecer el espíritu de equipo mediante retos que permiten
+    acumular puntos hasta coronar al Equipo Campeón.
+  </p>
+  <p class="retos-intro" style="font-size:.85rem;color:var(--text-mid)">
+    Aquí van las reglas que aplican a todos los retos. Qué es cada reto se revela el día que se publica —
+    revisa la <a href="/retos" style="color:var(--green-mid);font-weight:700">hoja de ruta en Retos</a>.
+  </p>
+</section>
+
+<section class="section">
+  <div class="info-stack">
+
+    <div class="info-card">
+      <h3>1. Reglas Generales</h3>
+      <ol class="retos-rules-list" style="max-width:none;margin:0;padding-left:20px">
+        <li>Los 72 participantes estarán distribuidos en 5 equipos (uno por villa) y todos participarán en los 7 retos.</li>
+        <li>Antes de cada reto, el facilitador explicará las instrucciones, el tiempo, los turnos y el criterio de puntuación.</li>
+        <li>Todos los equipos tendrán las mismas condiciones, tiempo y cantidad de oportunidades.</li>
+        <li>Los puntos obtenidos se acumularán en el marcador general. Las penalizaciones se descontarán del total.</li>
+        <li>No se repetirá una prueba, salvo que el facilitador determine que una situación externa afectó el resultado.</li>
+        <li>Los participantes deben respetar turnos, líneas, áreas delimitadas y señales de inicio y cierre.</li>
+        <li>No está permitido interferir con otro equipo ni recibir ayuda de personas que no participen en el reto.</li>
+        <li>La seguridad está por encima de la competencia. El facilitador podrá detener cualquier acción riesgosa.</li>
+        <li>Las decisiones del equipo facilitador sobre tiempos, aciertos, posiciones y penalizaciones serán oficiales.</li>
+        <li>En caso de empate en la puntuación final, se realizará un reto relámpago de desempate.</li>
+        <li><strong>Regla principal:</strong> competir con respeto, apoyar al equipo, integrarnos y disfrutar.</li>
+      </ol>
+    </div>
+
+    <div class="info-card">
+      <h3>⚠️ Penalizaciones</h3>
+      <ul class="info-list plain reglamento-list">
+        <li><span class="reglamento-situacion">Salir antes de la señal de inicio</span><span class="reglamento-valor penalty">−5 pts</span></li>
+        <li><span class="reglamento-situacion">Sobrepasar una línea o límite establecido</span><span class="reglamento-valor penalty">Intento no válido</span></li>
+        <li><span class="reglamento-situacion">Realizar un intento adicional</span><span class="reglamento-valor penalty">Intento no válido</span></li>
+        <li><span class="reglamento-situacion">Continuar después de finalizar el tiempo</span><span class="reglamento-valor penalty">No cuenta</span></li>
+        <li><span class="reglamento-situacion">Recibir ayuda externa durante un reto</span><span class="reglamento-valor penalty">−10 pts</span></li>
+        <li><span class="reglamento-situacion">No respetar instrucciones o turnos</span><span class="reglamento-valor penalty">−10 pts</span></li>
+        <li><span class="reglamento-situacion">Interferir intencionalmente con otro equipo</span><span class="reglamento-valor penalty">−20 pts</span></li>
+        <li><span class="reglamento-situacion">Mover u ocultar elementos para perjudicar a otro equipo</span><span class="reglamento-valor penalty">−20 pts</span></li>
+        <li><span class="reglamento-situacion">Conducta antideportiva o falta de respeto</span><span class="reglamento-valor penalty">−20 pts</span></li>
+        <li><span class="reglamento-situacion">Acción que represente un riesgo de seguridad</span><span class="reglamento-valor penalty">Se detiene la participación</span></li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>🎁 Puntos Bonus</h3>
+      <ul class="info-list plain reglamento-list">
+        <li><span class="reglamento-situacion"><strong>Espíritu de equipo</strong> — Animación, apoyo, identidad, participación y energía durante toda la actividad.</span><span class="reglamento-valor bonus">+50 pts</span></li>
+        <li><span class="reglamento-situacion"><strong>Fair Play</strong> — Respeto por las reglas, facilitadores, integrantes y demás equipos.</span><span class="reglamento-valor bonus">+50 pts</span></li>
+      </ul>
+      <p class="reglamento-formula">Puntuación final = puntos de los 7 retos + bonus − penalizaciones</p>
+    </div>
+
+    <div class="info-card">
+      <h3>🤝 Desempate y Seguridad</h3>
+      <ul class="info-list plain">
+        <li style="margin-bottom:10px"><strong>Desempate:</strong> si dos o más equipos alcanzan el mismo total, se realizará un reto relámpago definido por el equipo facilitador.</li>
+        <li><strong>Seguridad:</strong> no se permite empujar, bloquear, lanzar objetos hacia personas ni realizar acciones fuera del área. El facilitador puede detener el reto cuando identifique un riesgo.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand">Logística CND &nbsp;·&nbsp; Junte Familiar 2026</p>
+    <p class="footer-lugar">📍 Rancho Las Guazaras, Jarabacoa</p>
+    <p class="footer-fecha">16 de Octubre 2026</p>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="static/js/firebase-init.js"></script>
+<script src="static/js/auth.js"></script>
+<script src="static/js/nav.js"></script>
+</body>
+</html>

@@ -22,5 +22,9 @@ def admin():
 def retos():
     return render_template("retos.html")
 
+@app.route("/reglamento")
+def reglamento():
+    return render_template("reglamento.html")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
