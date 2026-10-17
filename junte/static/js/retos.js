@@ -104,16 +104,31 @@ function watchRetos() {
         try { applyRetoState(slug, snap.exists ? snap.data() : null); }
         catch (err) { console.error(`Error aplicando reto de ${slug}:`, err); }
       },
-      err => console.error(`Error leyendo reto de ${slug}:`, err) // se queda bloqueado, no se rompe nada
+      err => {
+        // Si el admin vuelve a bloquear un reto que ya estaba visible, este
+        // mismo listener deja de poder leer ese documento (las reglas ya no
+        // lo permiten) y Firestore entrega un error en vez de un snapshot
+        // nuevo — sin esto, la hoja de ruta se quedaría pegada en
+        // "Disponible" para siempre. Lo tratamos igual que "ya no hay nada
+        // que ver aquí": mismo efecto que si el doc no existiera.
+        console.error(`Error leyendo reto de ${slug}:`, err);
+        delete retosCache[slug];
+        try { syncRoadmap(); } catch (e) { console.error("Error sincronizando la hoja de ruta:", e); }
+      }
     );
   });
 }
 
 function applyRetoState(slug, data) {
   const card = document.querySelector(`.reto-card[data-villa="${slug}"]`);
-  if (!card || !data || !data.estado || data.estado === "bloqueado") { delete retosCache[slug]; return; } // sigue bloqueado tal cual
+  if (!card || !data || !data.estado || data.estado === "bloqueado") {
+    delete retosCache[slug];
+    try { syncRoadmap(); } catch (err) { console.error("Error sincronizando la hoja de ruta:", err); }
+    return; // sigue bloqueado tal cual
+  }
 
   retosCache[slug] = data;
+  try { syncRoadmap(); } catch (err) { console.error("Error sincronizando la hoja de ruta:", err); }
 
   const statusEl = card.querySelector('[data-role="status"]');
   const msgEl    = card.querySelector('[data-role="msg"]');
@@ -135,6 +150,41 @@ function applyRetoState(slug, data) {
     btnEl.textContent = "Ver reto";
   }
   btnEl.onclick = () => openRetoDetail(slug);
+}
+
+/* ══════════════════ HOJA DE RUTA — solo el candado, nunca el título ═════
+   retosCache ya trae "numero" y "estado" por villa (vienen del doc real
+   que publica el admin). Esto solo decide si cada ítem #2-7 se ve
+   disponible/completado o sigue bloqueado — el texto de abajo se queda
+   siempre "Reto #N", nunca el título real, para no arruinar la sorpresa
+   antes de que el admin lo revele desde /retos directamente. */
+function syncRoadmap() {
+  const porNumero = {}; // numero -> "disponible" | "completado" (el mejor estado visto entre villas)
+  Object.values(retosCache).forEach(r => {
+    if (!r?.numero || !r?.estado) return;
+    if (r.estado === "completado" || !porNumero[r.numero]) porNumero[r.numero] = r.estado;
+  });
+
+  document.querySelectorAll(".roadmap-item[data-roadmap-num]").forEach(item => {
+    const num = Number(item.dataset.roadmapNum);
+    const badge = item.querySelector(".reto-status-badge");
+    if (!badge) return;
+    const estado = porNumero[num];
+
+    if (estado === "disponible") {
+      item.classList.add("unlocked");
+      badge.className = "reto-status-badge open";
+      badge.textContent = "✅ Disponible";
+    } else if (estado === "completado") {
+      item.classList.add("unlocked");
+      badge.className = "reto-status-badge done";
+      badge.textContent = "🏁 Completado";
+    } else {
+      item.classList.remove("unlocked");
+      badge.className = "reto-status-badge locked";
+      badge.textContent = "🔒 Bloqueado";
+    }
+  });
 }
 
 /* ══════════════════ FOTO APROBADA DE CADA VILLA ══════════════════════════
